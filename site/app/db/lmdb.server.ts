@@ -1,4 +1,4 @@
-import lmdb from "lmdb";
+import lmdb, { open } from "lmdb";
 import type { DB, PageId } from "./types.server";
 import { MAXIMUM_KEY } from "ordered-binary";
 import short from "short-uuid";
@@ -9,6 +9,7 @@ type LMDBConfig = {
 
 type RawPage = {
   html: string;
+  title: string;
   url: string;
   date: Date;
 };
@@ -22,13 +23,13 @@ type RawComment = {
 const STRUCTURES_KEY = Symbol.for("structures");
 
 export default class DBImpl implements DB {
-  pages: lmdb.Database<RawPage>;
-  comments: lmdb.Database<RawComment>;
+  pages: lmdb.Database<RawPage, string>;
+  comments: lmdb.Database<RawComment, [string, string]>;
   Page: DB["Page"];
   translator: short.Translator;
 
   constructor({ path }: LMDBConfig) {
-    const root = lmdb.open(path, { sharedStructuresKey: STRUCTURES_KEY });
+    const root = open(path, { sharedStructuresKey: STRUCTURES_KEY });
     this.pages = root.openDB({
       name: "Page",
       sharedStructuresKey: STRUCTURES_KEY,
@@ -47,10 +48,10 @@ export default class DBImpl implements DB {
     this.translator = short();
   }
 
-  #makePage: DB["Page"]["makePage"] = async ({ html, url }) => {
-    const id = this.translator.new().toString();
-    await this.pages.put(id, { html, url, date: new Date() });
-    return id as PageId;
+  #makePage: DB["Page"]["makePage"] = async ({ html, url, title }) => {
+    const postId = short.generate();
+    await this.pages.put(postId, { html, url, title, date: new Date() });
+    return postId as string as PageId;
   };
 
   #getPageWithComments: DB["Page"]["getPageWithComments"] = (postId) => {

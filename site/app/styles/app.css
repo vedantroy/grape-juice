@@ -702,6 +702,14 @@ select {
   width: 100vw;
 }
 
+.w-\[500px\] {
+  width: 500px;
+}
+
+.w-\[700px\] {
+  width: 700px;
+}
+
 .max-w-\[66\%\] {
   max-width: 66%;
 }
@@ -736,6 +744,10 @@ select {
 
 .gap-2 {
   gap: 0.5rem;
+}
+
+.break-words {
+  overflow-wrap: break-word;
 }
 
 .break-all {

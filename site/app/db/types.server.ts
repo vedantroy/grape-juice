@@ -5,6 +5,7 @@ export type PageId = Brand<string, "PageId">;
 export type Page = {
   html: string;
   url: string;
+  title: string;
   date: Date;
   comments: Comment[];
 };
@@ -20,7 +21,7 @@ export type Comment = {
 export interface DB {
   Page: {
     slugToPageId(slug: string): PageId;
-    makePage(args: Pick<Page, "html" | "url">): Promise<PageId>;
+    makePage(args: Pick<Page, "html" | "url" | "title">): Promise<PageId>;
     getPageWithComments(id: PageId): Promise<Page | null> | Page | null;
     makeComment(
       id: PageId,

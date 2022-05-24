@@ -1,21 +1,18 @@
 import tw from "~/components/tw-styled";
 import { Col, Row } from "~/components/layout";
 import { ActionFunction, json, LoaderFunction } from "@remix-run/node";
-import { addPrewrap, getHighlighter } from "~/services/shiki.server";
 import { useLoaderData } from "@remix-run/react";
 import { MdContentCopy } from "react-icons/md";
+import { createAnonPostCode } from "~/generated/highlighted_code";
 import clsx from "clsx";
+import { HOST_URL } from "~/services/env";
 
 type API = {
   code: string;
 };
 
-const ANON_POST_CODE = `fetch("https://instaforum.com/api/v1/posts/", { method: "POST" });\nconsole.log("world")`;
-
 export const loader: LoaderFunction = async ({ request }) => {
-  const highlighter = await getHighlighter();
-  const code = highlighter.codeToHtml(ANON_POST_CODE, { lang: "js" });
-  const wrapped = addPrewrap(code);
+  const wrapped = createAnonPostCode({ prewrap: true, hostUrl: HOST_URL });
   return json({ code: wrapped } as API);
 };
 
@@ -24,7 +21,9 @@ export const action: ActionFunction = async ({ request }) => {
   const { type } = json;
 };
 
-const Card = tw.div("bg-gray-700 mx-auto px-6 py-6 w-96 max-w-[66%] rounded");
+const Card = tw.div(
+  "bg-gray-700 mx-auto px-6 py-6 w-[700px] max-w-[66%] rounded"
+);
 const Header = tw.div("text-white font-semibold text-xl");
 const CodeBox = tw.div("w-full p-2 cursor-pointer rounded-lg");
 
