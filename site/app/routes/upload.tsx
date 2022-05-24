@@ -1,9 +1,9 @@
 import tw from "~/components/tw-styled";
 import { Col, Row } from "~/components/layout";
-import { json, LoaderFunction } from "@remix-run/node";
+import { ActionFunction, json, LoaderFunction } from "@remix-run/node";
 import { addPrewrap, getHighlighter } from "~/services/shiki.server";
 import { useLoaderData } from "@remix-run/react";
-import { GoClippy } from "react-icons/go";
+import { MdContentCopy } from "react-icons/md";
 import clsx from "clsx";
 
 type API = {
@@ -17,6 +17,11 @@ export const loader: LoaderFunction = async ({ request }) => {
   const code = highlighter.codeToHtml(ANON_POST_CODE, { lang: "js" });
   const wrapped = addPrewrap(code);
   return json({ code: wrapped } as API);
+};
+
+export const action: ActionFunction = async ({ request }) => {
+  const json = await request.json();
+  const { type } = json;
 };
 
 const Card = tw.div("bg-gray-700 mx-auto px-6 py-6 w-96 max-w-[66%] rounded");
@@ -37,6 +42,7 @@ const HorizontalDivider = ({ text }: { text: string }) => (
 
 const MATERIAL_PALENIGHT_BACKGROUND = "#292D3E";
 const TW_EMERALD_500 = "#10b981";
+const TW_EMERALD_400 = "#34d399";
 
 export default function () {
   const data = useLoaderData<API>();
@@ -47,7 +53,7 @@ export default function () {
         style={{
           //aspectRatio: "2 / 3",
           // Can't set top border using tailwind
-          borderTop: clsx("2px solid", TW_EMERALD_500),
+          borderTop: clsx("2px solid", TW_EMERALD_400),
           //background: "linear-gradient(180deg, #1F2937 0%, #4B5563 100%);",
           //background: "linear-gradient(180deg, #1F2937 0%, #374151 100%);",
         }}
@@ -56,7 +62,7 @@ export default function () {
         <CodeBox style={{ background: MATERIAL_PALENIGHT_BACKGROUND }}>
           <div className="relative break-all max-w-full pr-8">
             <div dangerouslySetInnerHTML={{ __html: data.code }}></div>
-            <GoClippy color="white" className="absolute top-0 right-0" />
+            <MdContentCopy color="white" className="absolute top-0 right-0" />
           </div>
         </CodeBox>
         <HorizontalDivider text="or" />
