@@ -18,8 +18,6 @@ const ALLOW_CORS_HEADERS = {
 export const action: ActionFunction = async ({ request }) => {
   const { html, url, title } = Schema.parse(await request.json());
 
-  console.log("DATA IS BEING INSERTED");
-
   // No validation for now -- maybe we'll want it in the future?
   const postId = await DB.Page.makePage({ html, url, title });
   const response = {
