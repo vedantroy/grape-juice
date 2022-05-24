@@ -1,5 +1,6 @@
 import lmdb from "lmdb";
-import type { DB, PageId, Comment } from "./types.server";
+import type { DB, PageId } from "./types.server";
+import { MAXIMUM_KEY } from "ordered-binary";
 import short from "short-uuid";
 
 type LMDBConfig = {
@@ -12,13 +13,17 @@ type RawPage = {
   date: Date;
 };
 
-type RawComments = Array<Comment>;
+type RawComment = {
+  userId: string;
+  text: string;
+  date: Date;
+};
 
 const STRUCTURES_KEY = Symbol.for("structures");
 
 export default class DBImpl implements DB {
   pages: lmdb.Database<RawPage>;
-  comments: lmdb.Database<RawComments>;
+  comments: lmdb.Database<RawComment>;
   Page: DB["Page"];
   translator: short.Translator;
 
@@ -48,33 +53,25 @@ export default class DBImpl implements DB {
     return id as PageId;
   };
 
-  #getPageWithComments: DB["Page"]["getPageWithComments"] = (id) => {
-    const page = this.pages.get(id);
+  #getPageWithComments: DB["Page"]["getPageWithComments"] = (postId) => {
+    const page = this.pages.get(postId);
     if (!page) return null;
-    const comments = this.comments.get(id);
-    return { ...page, comments: comments || [] };
+
+    const comments = [
+      ...this.comments
+        .getRange({ start: postId, end: [postId, MAXIMUM_KEY] })
+        .map((x) => x.value),
+    ];
+
+    return { ...page, comments: comments };
   };
 
   #makeComment: DB["Page"]["makeComment"] = async (
-    id,
+    postId,
     comment
   ): Promise<void> => {
     const date = new Date();
-
-    await this.comments.transaction(() => {
-      const created = this.comments.ifNoExists(id, () =>
-        this.comments.put(id, [{ ...comment, date }])
-      );
-
-      if (!created) {
-        // insert at the end
-        this.comments.put(id, [
-          // we know the comments exist since ifNoExist returned false
-          // and we're in a transaction
-          ...this.comments.get(id)!!,
-          { ...comment, date },
-        ]);
-      }
-    });
+    const commentId = short.generate();
+    await this.comments.put([postId, commentId], { ...comment, date });
   };
 }
