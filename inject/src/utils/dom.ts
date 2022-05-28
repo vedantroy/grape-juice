@@ -9,3 +9,13 @@ export function htmlToElement(html: string): ChildNode {
   invariant(template.content.firstChild, `Could not parse HTML: ${html}`);
   return template.content.firstChild;
 }
+
+export function getRange(): Range | null {
+  const selection = document.getSelection();
+  // TODO: Not sure `selectedText` is every actually empty
+  const selectedText = selection?.toString() || "";
+  if (selection && selection.rangeCount > 0 && selectedText.length > 0) {
+    const range = selection.getRangeAt(0);
+    return range.collapsed ? null : range;
+  } else return null;
+}

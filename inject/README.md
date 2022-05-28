@@ -5,6 +5,8 @@
   - Disable all events on user highlighters
 - A highlight creates a highlight node with no comment nodes. A highlight node w/ no comment nodes results in a make comment icon
 
+We are going to use
+
 ### Overlapping highlights?
 
 - Can we hack this stuff?
