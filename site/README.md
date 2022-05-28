@@ -1,51 +1,18 @@
-# Welcome to Remix!
+# uWebSockets
 
-- [Remix Docs](https://remix.run/docs)
+We're using [uWebSockets.js](https://github.com/uNetworking/uWebSockets.js/) because it has builtin support for pub/sub
 
-## Development
+- It must be compiled from source (no npm)
+  - `git clone --recursive https://github.com/uNetworking/uWebSockets.js.git uws`
+  - `cd uws && make`
+  - files will be in dist
+  - The `.node` files are checked into Github since compiling takes a while
 
-Start the Remix development asset server and the Express server by running:
+# DevEx
 
-```sh
-npm run dev
-```
+- Use `dev-with-hot-reloading` in order to get automatic page refresh / hot-reloading when changing site source code
+- Use `dev` when developing websocket code (it will automatically restart `server.ts`)
 
-This starts your app in development mode, which will purge the server require cache when Remix rebuilds assets so you don't need a process manager restarting the express server.
+# Remix
 
-## Deployment
-
-First, build your app for production:
-
-```sh
-npm run build
-```
-
-Then run the app in production mode:
-
-```sh
-npm start
-```
-
-Now you'll need to pick a host to deploy it to.
-
-### DIY
-
-If you're familiar with deploying express applications you should be right at home just make sure to deploy the output of `remix build`
-
-- `build/`
-- `public/build/`
-
-### Using a Template
-
-When you ran `npx create-remix@latest` there were a few choices for hosting. You can run that again to create a new project, then copy over your `app/` folder to the new project that's pre-configured for your target server.
-
-```sh
-cd ..
-# create a new project, and pick a pre-configured host
-npx create-remix@latest
-cd my-new-remix-app
-# remove the new project's app (not the old one!)
-rm -rf app
-# copy your app over
-cp -R ../my-old-remix-app/app app
-```
+[Remix Docs](https://remix.run/docs)

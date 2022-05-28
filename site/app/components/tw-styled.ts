@@ -172,7 +172,8 @@ type Helper = {
 const attributeNameToConstructor = fromPairs(
   elementsArray.map((tagName) => [
     tagName,
-    (className: string) => createElementWithClasses(tagName, className),
+    (className: string) =>
+      createElementWithClasses(tagName, className.trim().replace("\n", " ")),
   ])
 ) as Helper;
 
