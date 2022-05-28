@@ -28,10 +28,10 @@
     "goober": "^2.1.9",
     "lodash-es": "^4.17.21",
     "rangee": "^1.1.7",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "react-hot-toast": "^2.2.0",
-    "react-shadow": "^19.0.3",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0",
+    "react-shadow-root": "^6.2.0",
+    "react-toastify": "^9.0.1",
     "short-uuid": "^4.2.0",
     "tiny-invariant": "^1.2.0"
   }

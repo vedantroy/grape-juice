@@ -3,12 +3,15 @@
 // - No support for incremental updates, we always send the entire range
 
 import React from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 
+// TODO: I patched this package to work
+// but the fact that I had to patch it means I should vet
+// it for proper behavior (is it as recent as what the Github source)
+// https://github.com/LukasRada/rangee
 import { Rangee } from "rangee";
 
 // NPM version doesn't work with Vite
-//import { Rangee } from "./vendor/rangee";
 import { getRange } from "./utils/dom";
 import HighlightApp, { setCoordsIfLoaded } from "./components/highlightApp";
 import OverlayApp from "./components/overlayApp";
@@ -24,7 +27,7 @@ function injectReactApp(app: React.ReactElement, suffix: string) {
   const div = document.createElement("div");
   div.id = CONTAINER_ID;
   document.body.appendChild(div);
-  ReactDOM.render(app, div);
+  createRoot(div).render(app);
 }
 
 injectReactApp(<HighlightApp />, "highlight-button");

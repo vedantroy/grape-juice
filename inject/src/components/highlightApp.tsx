@@ -1,4 +1,4 @@
-import root from "react-shadow";
+import ReactShadowRoot from "react-shadow-root";
 import React, { useState } from "react";
 import styles from "../index.css";
 import tw from "../utils/tw-styled";
@@ -25,6 +25,7 @@ const Button = tw.button(`
     font-semibold
     px-2
     py-1.5
+    select-none
 `);
 
 const App = () => {
@@ -32,14 +33,16 @@ const App = () => {
   // We need to control this value outside of React
   window.setCoords = setCoords;
   return (
-    <root.div>
-      <style type="text/css">{styles}</style>
-      {coords ? (
-        <Button style={{ zIndex: 9999, top: coords.y, left: coords.x }}>
-          Highlight
-        </Button>
-      ) : null}
-    </root.div>
+    <div>
+      <ReactShadowRoot>
+        <style type="text/css">{styles}</style>
+        {coords ? (
+          <Button style={{ zIndex: 9999, top: coords.y, left: coords.x }}>
+            Highlight
+          </Button>
+        ) : null}
+      </ReactShadowRoot>
+    </div>
   );
 };
 

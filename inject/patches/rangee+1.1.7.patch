@@ -1,0 +1,41 @@
+diff --git a/node_modules/rangee/index.d.ts b/node_modules/rangee/index.d.ts
+index cfce791..45d1e27 100644
+--- a/node_modules/rangee/index.d.ts
++++ b/node_modules/rangee/index.d.ts
+@@ -9,7 +9,7 @@ export declare class Rangee {
+     onSerialization: (callback: (serialized: string) => void) => (serialized: string) => void;
+     onCompression: (callback: (compressed: Uint8Array) => void) => (compressed: Uint8Array) => void;
+     serializeAtomic: (range: Range) => string;
+-    deserilaizeAtomic: (representation: string) => Range[];
++    deserializeAtomic: (representation: string) => Range[];
+     serialize: (range: Range) => string;
+     deserialize: (serialized: string) => Range;
+     createAtomicRanges: (range: Range) => Range[];
+diff --git a/node_modules/rangee/index.js b/node_modules/rangee/index.js
+index 3ad8598..773411b 100644
+--- a/node_modules/rangee/index.js
++++ b/node_modules/rangee/index.js
+@@ -23,7 +23,7 @@ var Rangee = /** @class */ (function () {
+             var encoded = RangeEncoder_1.encode(compressed);
+             return encoded;
+         };
+-        this.deserilaizeAtomic = function (representation) {
++        this.deserializeAtomic = function (representation) {
+             var decoded = RangeEncoder_1.decode(representation);
+             var decompressed = RangeCompressor_1.decompress(decoded);
+             var serializedRanges = decompressed
+diff --git a/node_modules/rangee/package.json b/node_modules/rangee/package.json
+index c6e7a10..5ecee77 100644
+--- a/node_modules/rangee/package.json
++++ b/node_modules/rangee/package.json
+@@ -2,8 +2,8 @@
+   "name": "rangee",
+   "version": "1.1.7",
+   "description": "Serialize/deserialize Range in HTML.",
+-  "main": "dist/index.js",
+-  "types": "dist/index.d.ts",
++  "main": "./index.js",
++  "types": "./index.d.ts",
+   "scripts": {
+     "compile": "tsc --build tsconfig.json",
+     "copy": "copy package.json dist"
