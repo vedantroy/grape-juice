@@ -1,6 +1,6 @@
 import type { WebSocket } from "../lib/uws";
 import { pack } from "msgpackr";
-import { Codes } from "./codes";
+import { Codes } from "./protocol";
 
 // From UWS docs:
 // * Ironically, JavaScript strings are the least performant of all options, to pass or receive to/from C++.
