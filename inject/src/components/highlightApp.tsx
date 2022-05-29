@@ -2,6 +2,8 @@ import ReactShadowRoot from "react-shadow-root";
 import React, { useState } from "react";
 import styles from "../index.css";
 import tw from "../utils/tw-styled";
+import { USER_ID_SYMBOL } from "../utils/globals";
+import clsx from "clsx";
 
 type Coords = { x: number; y: number };
 type SetCoords = (coords: Coords | null) => void;
@@ -37,7 +39,15 @@ const App = () => {
       <ReactShadowRoot>
         <style type="text/css">{styles}</style>
         {coords ? (
-          <Button style={{ zIndex: 9999, top: coords.y, left: coords.x }}>
+          <Button
+            // This will almost never trigger, but it's here for completeness
+            // (If the user highlights text before the fingerprint loads)
+            className={clsx(
+              !window[USER_ID_SYMBOL] &&
+                "bg-blue-300 hover:bg-blue-300 cursor-wait"
+            )}
+            style={{ zIndex: 9999, top: coords.y, left: coords.x }}
+          >
             Highlight
           </Button>
         ) : null}

@@ -10,15 +10,46 @@ import { createRoot } from "react-dom/client";
 // it for proper behavior (is it as recent as what the Github source)
 // https://github.com/LukasRada/rangee
 import { Rangee } from "rangee";
+import FingerprintJS from "@fingerprintjs/fingerprintjs";
 
 // NPM version doesn't work with Vite
 import { getRange } from "./utils/dom";
 import HighlightApp, { setCoordsIfLoaded } from "./components/highlightApp";
-import OverlayApp from "./components/overlayApp";
+import OverlayApp, { OVERLAY_LOADED } from "./components/overlayApp";
+import { USER_ID_SYMBOL } from "./utils/globals";
 
 // Step 1:
 // [x] Show the save button next to the range
 // Figure out how data layer will work
+
+declare global {
+  interface Window {
+    [USER_ID_SYMBOL]: string | undefined;
+  }
+}
+
+const sleep = (ms: number) =>
+  new Promise((resolve, reject) => setTimeout(resolve, ms));
+
+async function go() {
+  const fp = await FingerprintJS.load();
+  // We don't have any auth, so this is how we do things like
+  // "anonymous badger" -- it feels very transparent to the user
+  // (they will see they are an anonymous badger between page visits)
+  const { visitorId } = await fp.get();
+  window[USER_ID_SYMBOL] = visitorId;
+}
+go();
+
+console.time("loadStart");
+//window.addEventListener(OVERLAY_LOADED, async () => {
+//  const fp = await FingerprintJS.load();
+//  // We don't have any auth, so this is how we do things like
+//  // "anonymous badger" -- it feels very transparent to the user
+//  // (they will see they are an anonymous badger between page visits)
+//  const { visitorId } = await fp.get();
+//  window.setUserId(visitorId);
+//});
 
 function injectReactApp(app: React.ReactElement, suffix: string) {
   const RAND_UUID = "537e51e0-1389-4382-af6b-f8a95f1ed6a6";

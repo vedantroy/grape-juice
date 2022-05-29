@@ -1,68 +1,65 @@
-//import root from "react-shadow";
-
-import React, { useCallback, useRef, useState } from "react";
-import styles from "../index.css";
-//import tw from "../utils/tw-styled";
-import { extractCss } from "goober";
+import React, { useEffect, useRef, useState } from "react";
 import ReactShadowRoot from "react-shadow-root";
 import { ToastContainer, toast } from "react-toastify";
+import useWebSocket, { ReadyState } from "react-use-websocket";
+
 import toastStyles from "react-toastify/dist/ReactToastify.css";
+import styles from "../index.css";
 
-const TOAST_CSS = extractCss();
+type Selection = {
+  serialized: string;
+};
 
-// Problem: Toast CSS is not applied to the shadow dom
-// Urgency: Low-ish
-// Punt till later?
-// Reasons not to punt: We might get roped into another design decision
-// that prevents us from using Goober
-// Decision: Punt
-// I think I can solve this problem with:
-// https://docs.npmjs.com/cli/v8/configuring-npm/package-json#overrides
-// install goober, patch it to only work inside a shadow DOM
-// then override the react-hot-toast goober dep to my custom goober
+export const OVERLAY_LOADED = "overlay-loaded";
+
+const reconnectToastId = "reconnect-toast";
+const connectingToastId = "connect-toast";
 
 const App = () => {
-  const [ref, setRef] = useState<ReactShadowRoot | null>(null);
-  if (ref) {
-    console.log("reffing");
-    setInterval(() => {
-      console.log("mkaign toast");
-      toast.error("Hello world!");
-    }, 1_000);
-  }
-
-  //const setRef2 = useCallback((target: HTMLElement) => {
-  //  css.bind({ target });
-  //  styled.bind({ target });
-  //  toast("can I display toasts !!");
-  //}, []);
-
-  //const [ref, setRef] = useState<HTMLElement | null>(null);
-  //if (ref) {
-  //  console.log("MAKING TOAST");
-  //}
-
-  console.log(`setting css to: ${TOAST_CSS}`);
-
-  //@ts-ignore
-  if (!ref) setRef(true);
-
   return (
-    //<div>
-    //  <style type="text/css">{styles}</style>
-    //  <style type="text/css">{TOAST_CSS}</style>
-    //  <Toaster position="bottom-right" />
-    //  fun!fun!
-    //</div>
-
     <div>
-      <ReactShadowRoot ref={(ref) => setRef(ref)}>
+      <ReactShadowRoot>
         <style type="text/css">{styles}</style>
         <style type="text/css">{toastStyles}</style>
-        <ToastContainer />
+        <ToastContainer pauseOnFocusLoss={false} pauseOnHover={false} />
       </ReactShadowRoot>
     </div>
   );
 };
 
 export default App;
+
+/*
+  const { sendMessage, lastMessage, readyState } = useWebSocket(
+    "ws://localhost:9001/",
+    {
+      // There might be some goofy stuff going on here
+      // with double retries (not sure why ...)
+      retryOnError: true,
+      //onOpen(event) {
+      //  toast.dismiss(connectingToastId);
+      //  toast.update(connectingToastId, {
+      //    type: "success",
+      //    autoClose: 1000,
+      //    render: "success",
+      //  });
+      //},
+      //shouldReconnect(closeEvent) {
+      //  toast("Connecting", {
+      //    autoClose: 5_000,
+      //    toastId: connectingToastId,
+      //  });
+      //  return true;
+      //},
+      //reconnectAttempts: 2,
+      //reconnectInterval: 5_000,
+      //onReconnectStop(attempts) {
+      //  toast.dismiss(connectingToastId);
+      //  toast.error("Connection failed", {
+      //    autoClose: false,
+      //    toastId: reconnectToastId,
+      //  });
+      //},
+    }
+  );
+  */

@@ -29,7 +29,7 @@ let listening = false;
 export default function initWebSocketOnce() {
   if (!listening) listening = true;
   else return;
-  app.listen(9000, (token) => {
+  app.listen(PORT, (token) => {
     console.log("Token:", token);
     if (token) {
       console.log(`Listening to port ${PORT}`);
