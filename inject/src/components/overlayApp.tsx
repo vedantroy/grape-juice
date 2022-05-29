@@ -1,7 +1,10 @@
+// TODOS:
+// - Ranges are stored super inefficiently
+// - No support for incremental updates, we always send the entire range
+
 import React, { useEffect, useState } from "react";
 import ReactShadowRoot from "react-shadow-root";
 import { ToastContainer, toast } from "react-toastify";
-//import toastStyles from "react-toastify/dist/ReactToastify.css";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import { pack, unpack } from "msgpackr";
 import clsx from "clsx";
@@ -11,29 +14,20 @@ import {
   Codes,
   Message,
   SubscribeMessage,
-  ActiveHighlightMessage,
-  ActiveHighlightBin,
+  SelectionMessage,
 } from "@site/websocket/protocol";
 
+// https://github.com/vitejs/vite/issues/3246
 import styles from "../index.css?inline";
 import { Rangee } from "rangee";
 import ActiveHighlighter, { HighlighterProps } from "./highlighter";
+import { getSelectionUpdate, Selection } from "src/utils/selection";
+import { getUserIdOtherwiseCreateNew } from "src/utils/userId";
 
-export const OVERLAY_LOADED = "overlay-loaded";
-export const rangee = new Rangee({ document });
+const rangee = new Rangee({ document });
 
 const reconnectToastId = "reconnect-toast";
 const connectingToastId = "connect-toast";
-
-export type Selection = { x: number; y: number; serializedRange: string };
-type setSelection = (coords: Selection | null) => void;
-
-declare global {
-  interface Window {
-    setSelection: undefined | setSelection;
-    setUserId: undefined | ((userId: string) => void);
-  }
-}
 
 const HighlightButton = tw.button(`
     absolute
@@ -65,10 +59,8 @@ const App = () => {
       const buf = await lastMessage!!.data.arrayBuffer();
       const uint8 = new Uint8Array(buf);
       const msg = Message.parse(unpack(uint8));
-      if (msg.kind === Codes.ActiveHighlight) {
-        const { range, userId: highlightUserId } = unpack(
-          msg.bin
-        ) as ActiveHighlightBin;
+      if (msg.kind === Codes.Selection) {
+        const { range, userId: highlightUserId } = msg;
         // it's us, no need to do anything
         if (highlightUserId === userId) return;
         const ranges = rangee.deserializeAtomic(range);
@@ -82,9 +74,14 @@ const App = () => {
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    window.setSelection = setSelection;
-    window.setUserId = setUserId;
-    window.dispatchEvent(new Event(OVERLAY_LOADED));
+    const onSelection = () => setSelection(getSelectionUpdate(rangee));
+    document.addEventListener("onselectionchange", onSelection);
+    const go = async () => setUserId(await getUserIdOtherwiseCreateNew());
+    go();
+
+    return () => {
+      document.removeEventListener("onselectionchange", onSelection);
+    };
   }, []);
 
   useEffect(() => {
@@ -100,12 +97,14 @@ const App = () => {
   useEffect(() => {
     if (selection?.serializedRange && userId) {
       const { serializedRange } = selection;
-      const msg: ActiveHighlightMessage = {
-        kind: Codes.ActiveHighlight,
+      const msg: SelectionMessage = {
+        kind: Codes.Selection,
         postId: CHANNEL,
-        bin: pack({ range: serializedRange, userId } as ActiveHighlightBin),
+        range: serializedRange,
+        userId,
       };
       sendMessage(pack(msg), false);
+    } else if (userId) {
     }
   }, [selection?.serializedRange, userId]);
 

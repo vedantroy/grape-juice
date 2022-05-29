@@ -2,13 +2,25 @@ import zod, { z } from "zod";
 
 const Codes = {
   Subscribe: 0,
-  ActiveHighlight: 1,
+  Selection: 1,
   CursorPosition: 2,
+  ClearSelection: 3,
   // Never received, only sent to client
-  Subscribed: 2,
+  Subscribed: 4,
 } as const;
 
 export { Codes };
+
+// Active Operations
+// - change highlight
+// - remove highlight
+// - move cursor
+// - send chat
+// - expire chat
+// Why not use CRDT?
+// - With a CRDT I'll only need to transmit one type of update
+//    (e.g a generic "CRDTChange" message)
+// But I'll need to observe & integrate the changed data regardless
 
 const SubscribedMessage = zod.object({
   kind: z.literal(Codes.Subscribed),
@@ -20,32 +32,30 @@ const SubscribeMessage = zod.object({
 });
 export type SubscribeMessage = zod.infer<typeof SubscribeMessage>;
 
-export type ActiveHighlightBin = {
-  range: string;
-  userId: string;
-};
-
-const ActiveHighlightMessage = zod.object({
-  kind: z.literal(Codes.ActiveHighlight),
+const SelectionMessage = zod.object({
+  kind: z.literal(Codes.Selection),
   postId: z.string(),
-  // TODO: In the future, this can be nested message pack
-  // data that is serialized to binary
-  bin: z.any(),
+  range: z.string(),
+  userId: z.string(),
 });
-export type ActiveHighlightMessage = zod.infer<typeof ActiveHighlightMessage>;
+export type SelectionMessage = zod.infer<typeof SelectionMessage>;
+
+const ClearSelectionMessage = zod.object({
+  kind: z.literal(Codes.ClearSelection),
+  postId: z.string(),
+  userId: z.string(),
+});
 
 const CursorPositionMessage = zod.object({
   kind: z.literal(Codes.CursorPosition),
   postId: z.string(),
-  // See comment in `ActiveHighlight`
-  bin: z.any(),
 });
 export type CursorPositionMessage = zod.infer<typeof CursorPositionMessage>;
 
 export const Message = zod.union([
   SubscribeMessage,
   SubscribedMessage,
-  ActiveHighlightMessage,
+  SelectionMessage,
   CursorPositionMessage,
 ]);
 export type Message = zod.infer<typeof Message>;

@@ -4,7 +4,6 @@ import invariant from "tiny-invariant";
 import uWS from "../lib/uws";
 import { handleSubscribe, republishMessage } from "./handlers";
 import { Message, Codes } from "./protocol";
-import logger from "~/services/logger";
 
 const PORT = 9001;
 
@@ -13,15 +12,13 @@ const app = uWS.App({}).ws("/*", {
     invariant(isBinary, "Websocket messages must be binary");
     const unpacked = unpack(Buffer.from(bytes));
     const msg = Message.parse(unpacked);
-    const { postId } = msg;
 
-    if (
-      msg.kind === Codes.ActiveHighlight ||
-      msg.kind === Codes.CursorPosition
-    ) {
+    if (msg.kind === Codes.Selection || msg.kind === Codes.CursorPosition) {
+      const { postId } = msg;
       republishMessage(app, postId, bytes);
       //echoMessage(ws, postId, bytes);
     } else if (msg.kind === Codes.Subscribe) {
+      const { postId } = msg;
       handleSubscribe(ws, postId);
     }
   },
