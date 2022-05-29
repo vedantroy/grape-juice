@@ -73,14 +73,16 @@ const App = () => {
   const [selection, setSelection] = useState<Selection | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
+  console.log(selection, userId);
+
   useEffect(() => {
     const onSelection = () => setSelection(getSelectionUpdate(rangee));
-    document.addEventListener("onselectionchange", onSelection);
+    document.addEventListener("selectionchange", onSelection);
     const go = async () => setUserId(await getUserIdOtherwiseCreateNew());
     go();
 
     return () => {
-      document.removeEventListener("onselectionchange", onSelection);
+      document.removeEventListener("selectionchange", onSelection);
     };
   }, []);
 
