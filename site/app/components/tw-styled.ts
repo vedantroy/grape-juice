@@ -120,28 +120,29 @@ const elementsArray: (keyof JSX.IntrinsicElements)[] = [
   "video",
   "wbr",
 
+  // Never going to use tailwindcss on an SVG
   // SVG
-  "circle",
-  "clipPath",
-  "defs",
-  "ellipse",
-  "foreignObject",
-  "g",
-  "image",
-  "line",
-  "linearGradient",
-  "marker",
-  "mask",
-  "path",
-  "pattern",
-  "polygon",
-  "polyline",
-  "radialGradient",
-  "rect",
-  "stop",
-  "svg",
-  "text",
-  "tspan",
+  // "circle",
+  // "clipPath",
+  // "defs",
+  // "ellipse",
+  // "foreignObject",
+  // "g",
+  // "image",
+  // "line",
+  // "linearGradient",
+  // "marker",
+  // "mask",
+  // "path",
+  // "pattern",
+  // "polygon",
+  // "polyline",
+  // "radialGradient",
+  // "rect",
+  // "stop",
+  // "svg",
+  // "text",
+  // "tspan",
 ];
 
 type TagName = keyof JSX.IntrinsicElements;
@@ -173,7 +174,10 @@ const attributeNameToConstructor = fromPairs(
   elementsArray.map((tagName) => [
     tagName,
     (className: string) =>
-      createElementWithClasses(tagName, className.trim().replace("\n", " ")),
+      createElementWithClasses(
+        tagName,
+        className.trim().replace(/\s\s+/g, " ")
+      ),
   ])
 ) as Helper;
 

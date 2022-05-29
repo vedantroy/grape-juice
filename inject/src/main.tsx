@@ -14,42 +14,10 @@ import FingerprintJS from "@fingerprintjs/fingerprintjs";
 
 // NPM version doesn't work with Vite
 import { getRange } from "./utils/dom";
-import HighlightApp, { setCoordsIfLoaded } from "./components/highlightApp";
 import OverlayApp, { OVERLAY_LOADED } from "./components/overlayApp";
-import { USER_ID_SYMBOL } from "./utils/globals";
 
-// Step 1:
-// [x] Show the save button next to the range
-// Figure out how data layer will work
-
-declare global {
-  interface Window {
-    [USER_ID_SYMBOL]: string | undefined;
-  }
-}
-
-const sleep = (ms: number) =>
-  new Promise((resolve, reject) => setTimeout(resolve, ms));
-
-async function go() {
-  const fp = await FingerprintJS.load();
-  // We don't have any auth, so this is how we do things like
-  // "anonymous badger" -- it feels very transparent to the user
-  // (they will see they are an anonymous badger between page visits)
-  const { visitorId } = await fp.get();
-  window[USER_ID_SYMBOL] = visitorId;
-}
-go();
-
-console.time("loadStart");
-//window.addEventListener(OVERLAY_LOADED, async () => {
-//  const fp = await FingerprintJS.load();
-//  // We don't have any auth, so this is how we do things like
-//  // "anonymous badger" -- it feels very transparent to the user
-//  // (they will see they are an anonymous badger between page visits)
-//  const { visitorId } = await fp.get();
-//  window.setUserId(visitorId);
-//});
+const OVERLAY_TIMER = "overlay-load-timer";
+console.time(OVERLAY_TIMER);
 
 function injectReactApp(app: React.ReactElement, suffix: string) {
   const RAND_UUID = "537e51e0-1389-4382-af6b-f8a95f1ed6a6";
@@ -61,22 +29,51 @@ function injectReactApp(app: React.ReactElement, suffix: string) {
   createRoot(div).render(app);
 }
 
-injectReactApp(<HighlightApp />, "highlight-button");
-injectReactApp(<OverlayApp />, "overlay");
-
-const rangee = new Rangee({ document });
-document.addEventListener("selectionchange", () => {
-  const range = getRange();
-  if (range) {
-    const rangeRepresentation = rangee.serializeAtomic(range);
-
-    console.log(rangeRepresentation);
-    console.log(rangee.deserializeAtomic(rangeRepresentation));
-
-    const lastRect = [...range.getClientRects()].slice(-1)[0];
-
-    setCoordsIfLoaded({ x: lastRect.right + 20, y: lastRect.top });
-  } else {
-    setCoordsIfLoaded(null);
+function addSelectionChangeListener() {
+  const rangee = new Rangee({ document });
+  function tryToSerializeRange(
+    range: Range | null
+  ): { range: Range; serialized: string } | null {
+    if (!range) return null;
+    try {
+      return { range, serialized: rangee.serializeAtomic(range) };
+    } catch (e) {
+      return null;
+    }
   }
-});
+
+  document.addEventListener("selectionchange", () => {
+    const rangeAndSerializedRange = tryToSerializeRange(getRange());
+    if (!rangeAndSerializedRange) {
+      window.setSelection!!(null);
+    } else {
+      const { range, serialized } = rangeAndSerializedRange;
+      const rects = range.getClientRects();
+      const lastRect = rects[rects.length - 1];
+      window.setSelection!!({
+        x: lastRect.right + 20,
+        y: lastRect.top,
+        serializedRange: serialized,
+      });
+    }
+  });
+}
+
+async function setUserId() {
+  // We don't have any auth, so this is how we do things like
+  // "anonymous badger" -- it feels very transparent to the user
+  // (they will see they are an anonymous badger between page visits)
+  const fingerPrint = await FingerprintJS.load();
+  const { visitorId } = await fingerPrint.get();
+  window.setUserId!!(visitorId);
+}
+
+async function overlayLoaded() {
+  console.timeEnd(OVERLAY_TIMER);
+
+  addSelectionChangeListener();
+  setUserId();
+}
+
+window.addEventListener(OVERLAY_LOADED, overlayLoaded);
+injectReactApp(<OverlayApp />, "overlay");

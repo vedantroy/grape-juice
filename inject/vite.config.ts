@@ -1,8 +1,10 @@
 import { resolve, join } from "path";
 import { defineConfig } from "vite";
+import tsconfigPaths from "vite-tsconfig-paths";
 import glob from "glob";
 
 export default defineConfig({
+  plugins: [tsconfigPaths()],
   build: {
     rollupOptions: {
       output: {
