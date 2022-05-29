@@ -35,7 +35,6 @@
     "react-toastify": "^9.0.1",
     "react-use-websocket": "^4.2.0",
     "short-uuid": "^4.2.0",
-    "tiny-invariant": "^1.2.0",
-    "zod": "^3.17.3"
+    "tiny-invariant": "^1.2.0"
   }
 }

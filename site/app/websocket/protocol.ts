@@ -10,11 +10,20 @@ const Codes = {
 
 export { Codes };
 
+const SubscribedMessage = zod.object({
+  kind: z.literal(Codes.Subscribed),
+});
+
 const SubscribeMessage = zod.object({
   kind: z.literal(Codes.Subscribe),
   postId: z.string(),
 });
 export type SubscribeMessage = zod.infer<typeof SubscribeMessage>;
+
+export type ActiveHighlightBin = {
+  range: string;
+  userId: string;
+};
 
 const ActiveHighlightMessage = zod.object({
   kind: z.literal(Codes.ActiveHighlight),
@@ -35,6 +44,7 @@ export type CursorPositionMessage = zod.infer<typeof CursorPositionMessage>;
 
 export const Message = zod.union([
   SubscribeMessage,
+  SubscribedMessage,
   ActiveHighlightMessage,
   CursorPositionMessage,
 ]);

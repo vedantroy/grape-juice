@@ -14,7 +14,7 @@ import FingerprintJS from "@fingerprintjs/fingerprintjs";
 
 // NPM version doesn't work with Vite
 import { getRange } from "./utils/dom";
-import OverlayApp, { OVERLAY_LOADED } from "./components/overlayApp";
+import OverlayApp, { OVERLAY_LOADED, rangee } from "./components/overlayApp";
 
 const OVERLAY_TIMER = "overlay-load-timer";
 console.time(OVERLAY_TIMER);
@@ -30,7 +30,6 @@ function injectReactApp(app: React.ReactElement, suffix: string) {
 }
 
 function addSelectionChangeListener() {
-  const rangee = new Rangee({ document });
   function tryToSerializeRange(
     range: Range | null
   ): { range: Range; serialized: string } | null {

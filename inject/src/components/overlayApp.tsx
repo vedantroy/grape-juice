@@ -1,17 +1,26 @@
 import React, { useEffect, useState } from "react";
 import ReactShadowRoot from "react-shadow-root";
 import { ToastContainer, toast } from "react-toastify";
-import useWebSocket, { ReadyState } from "react-use-websocket";
-import { pack } from "msgpackr";
-
-import tw from "@site/components/tw-styled";
-import { Codes } from "@site/websocket/protocol";
-
 import toastStyles from "react-toastify/dist/ReactToastify.css";
-import styles from "../index.css";
+import useWebSocket, { ReadyState } from "react-use-websocket";
+import { pack, unpack } from "msgpackr";
 import clsx from "clsx";
 
+import tw from "@site/components/tw-styled";
+import {
+  Codes,
+  Message,
+  SubscribeMessage,
+  ActiveHighlightMessage,
+  ActiveHighlightBin,
+} from "@site/websocket/protocol";
+
+import styles from "../index.css";
+import { Rangee } from "rangee";
+import ActiveHighlighter, { HighlighterProps } from "./highlighter";
+
 export const OVERLAY_LOADED = "overlay-loaded";
+export const rangee = new Rangee({ document });
 
 const reconnectToastId = "reconnect-toast";
 const connectingToastId = "connect-toast";
@@ -38,11 +47,36 @@ const HighlightButton = tw.button(`
     select-none
 `);
 
+const CHANNEL = "foobar";
+
 const App = () => {
   const { sendMessage, lastMessage, readyState } = useWebSocket(
-    "ws://localhost:9001/",
+    `ws://localhost:9001/${CHANNEL}`,
     {}
   );
+
+  const [highlights, setHighlights] = useState<HighlighterProps["highlights"]>(
+    {}
+  );
+
+  useEffect(() => {
+    if (!lastMessage) return;
+    async function go() {
+      const buf = await lastMessage!!.data.arrayBuffer();
+      const uint8 = new Uint8Array(buf);
+      const msg = Message.parse(unpack(uint8));
+      if (msg.kind === Codes.ActiveHighlight) {
+        const { range, userId: highlightUserId } = unpack(
+          msg.bin
+        ) as ActiveHighlightBin;
+        // it's us, no need to do anything
+        if (highlightUserId === userId) return;
+        const ranges = rangee.deserializeAtomic(range);
+        setHighlights({ ...highlights, [highlightUserId]: ranges });
+      }
+    }
+    go();
+  }, [lastMessage?.data]);
 
   const [selection, setSelection] = useState<Selection | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -54,8 +88,26 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    sendMessage(pack({}), false);
-  }, [selection?.serializedRange]);
+    if (readyState === ReadyState.OPEN) {
+      const msg: SubscribeMessage = {
+        kind: Codes.Subscribe,
+        postId: CHANNEL,
+      };
+      sendMessage(pack(msg), true);
+    }
+  }, [readyState === ReadyState.OPEN]);
+
+  useEffect(() => {
+    if (selection?.serializedRange && userId) {
+      const { serializedRange } = selection;
+      const msg: ActiveHighlightMessage = {
+        kind: Codes.ActiveHighlight,
+        postId: CHANNEL,
+        bin: pack({ range: serializedRange, userId } as ActiveHighlightBin),
+      };
+      sendMessage(pack(msg), false);
+    }
+  }, [selection?.serializedRange, userId]);
 
   return (
     <div>
@@ -74,6 +126,7 @@ const App = () => {
             Highlight
           </HighlightButton>
         ) : null}
+        <ActiveHighlighter highlights={highlights} />
         <ToastContainer pauseOnFocusLoss={false} pauseOnHover={false} />
       </ReactShadowRoot>
     </div>

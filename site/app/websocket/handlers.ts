@@ -1,27 +1,43 @@
 import type { WebSocket } from "../lib/uws";
 import { pack } from "msgpackr";
+import type uws from "../lib/uws";
 import { Codes } from "./protocol";
+import logger from "../services/logger";
 
-// From UWS docs:
-// * Ironically, JavaScript strings are the least performant of all options, to pass or receive to/from C++.
-// * This because we expect UTF-8, which is packed in 8-byte chars. JavaScript strings are UTF-16 internally meaning extra copies and reinterpretation are required.
-// *
-// * That's why all events pass data by ArrayBuffer and not JavaScript strings, as they allow zero-copy data passing.
-const stringToBuffer = (s: string) => Buffer.from(s);
+//export function echoMessage(
+//  ws: uws.WebSocket,
+//  postId: string,
+//  bytes: ArrayBuffer
+//) {
+//  // This is purely for readability
+//  const opts = {
+//    chan: `/post/${postId}`,
+//    bytes,
+//    isBinary: true,
+//    compress: false,
+//  };
+//  logger.info(`Echoing message`);
+//  ws.send(opts.bytes, opts.isBinary, opts.compress);
+//}
 
 export function republishMessage(
-  ws: WebSocket,
+  app: uws.TemplatedApp,
   postId: string,
   bytes: ArrayBuffer
 ) {
   // This is purely for readability
   const opts = {
-    chan: stringToBuffer(`/post/${postId}`),
+    chan: `/post/${postId}`,
     bytes,
     isBinary: true,
     compress: false,
   };
-  ws.publish(opts.chan, opts.bytes, opts.isBinary, opts.compress);
+  logger.info(
+    `Republishing to ${opts.chan} with ${app.numSubscribers(
+      opts.chan
+    )} subscribers`
+  );
+  app.publish(opts.chan, opts.bytes, opts.isBinary, opts.compress);
 }
 
 export function handleSubscribe(ws: WebSocket, postId: string) {
@@ -30,6 +46,8 @@ export function handleSubscribe(ws: WebSocket, postId: string) {
     isBinary: true,
     compress: false,
   };
-  ws.subscribe(stringToBuffer(`/post/${postId}`));
+  const channel = `/post/${postId}`;
+  logger.info(`Subscribing to ${channel}`);
+  ws.subscribe(channel);
   ws.send(opts.msg, opts.isBinary, opts.compress);
 }

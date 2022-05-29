@@ -4,6 +4,7 @@ import invariant from "tiny-invariant";
 import uWS from "../lib/uws";
 import { handleSubscribe, republishMessage } from "./handlers";
 import { Message, Codes } from "./protocol";
+import logger from "~/services/logger";
 
 const PORT = 9001;
 
@@ -18,7 +19,8 @@ const app = uWS.App({}).ws("/*", {
       msg.kind === Codes.ActiveHighlight ||
       msg.kind === Codes.CursorPosition
     ) {
-      republishMessage(ws, postId, bytes);
+      republishMessage(app, postId, bytes);
+      //echoMessage(ws, postId, bytes);
     } else if (msg.kind === Codes.Subscribe) {
       handleSubscribe(ws, postId);
     }
