@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import ReactShadowRoot from "react-shadow-root";
 import { ToastContainer, toast } from "react-toastify";
-import toastStyles from "react-toastify/dist/ReactToastify.css";
+//import toastStyles from "react-toastify/dist/ReactToastify.css";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import { pack, unpack } from "msgpackr";
 import clsx from "clsx";
@@ -15,7 +15,7 @@ import {
   ActiveHighlightBin,
 } from "@site/websocket/protocol";
 
-import styles from "../index.css";
+import styles from "../index.css?inline";
 import { Rangee } from "rangee";
 import ActiveHighlighter, { HighlighterProps } from "./highlighter";
 
@@ -113,7 +113,7 @@ const App = () => {
     <div>
       <ReactShadowRoot>
         <style type="text/css">{styles}</style>
-        <style type="text/css">{toastStyles}</style>
+        {/* <style id="toastify" type="text/css"> {toastStyles}</style> */}
         {selection ? (
           <HighlightButton
             // This will almost never trigger, but it's here for completeness

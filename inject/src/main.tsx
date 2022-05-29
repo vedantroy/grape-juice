@@ -9,7 +9,6 @@ import { createRoot } from "react-dom/client";
 // but the fact that I had to patch it means I should vet
 // it for proper behavior (is it as recent as what the Github source)
 // https://github.com/LukasRada/rangee
-import { Rangee } from "rangee";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
 
 // NPM version doesn't work with Vite
