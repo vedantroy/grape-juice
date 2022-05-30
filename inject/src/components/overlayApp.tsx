@@ -74,9 +74,6 @@ const App = () => {
   const handleSelection = useCallback(
     (msg: SelectionMessage) => {
       const { range, userId: highlightUserId } = msg;
-      const isOurOwnHighlight = userId === highlightUserId;
-      if (isOurOwnHighlight) return;
-
       const ranges = rangee.deserializeAtomic(range);
       setTransientHighlights((highlights) => ({
         ...highlights,
@@ -88,11 +85,7 @@ const App = () => {
 
   const handleClearSelection = useCallback(
     (msg: ClearSelectionMessage) => {
-      // TODO: Extract this out later
       const { userId: highlightUserId } = msg;
-      const isOurOwnHighlight = userId === highlightUserId;
-      if (isOurOwnHighlight) return;
-
       setTransientHighlights((highlights) =>
         _.pickBy(highlights, (_, userId) => userId !== highlightUserId)
       );
@@ -106,7 +99,20 @@ const App = () => {
       if (noMessageOrUserIdNotLoaded) return;
 
       const bytes = new Uint8Array(await lastMessage!!.data.arrayBuffer());
+      console.log(bytes);
       const msg = Message.parse(unpack(bytes));
+
+      console.log(msg);
+
+      const sentDirectlyToUs = !(msg as any).userId;
+      const isOurOwnMessage =
+        sentDirectlyToUs || (msg as any).userId === userId;
+
+      if (
+        isOurOwnMessage &&
+        (msg.kind === Codes.Selection || msg.kind === Codes.ClearSelection)
+      )
+        return;
 
       switch (msg.kind) {
         case Codes.Selection:
@@ -115,9 +121,14 @@ const App = () => {
         case Codes.ClearSelection:
           handleClearSelection(msg);
           break;
-        case Codes.HighlightCreated:
-          window.getSelection()?.empty();
-          setHighlightStatus(HighlightStatus.Ready);
+        case Codes.CreateHighlight:
+          if (isOurOwnMessage) {
+            // This is prone to unituitive behavior
+            // if the submission is taking a while (e.g 10 seconds)
+            // the user highlights something else in the meantime
+            window.getSelection()?.empty();
+            setHighlightStatus(HighlightStatus.Ready);
+          }
           break;
         default:
           console.log(`Unexpected message: ${msg.kind}`);

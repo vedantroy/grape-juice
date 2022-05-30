@@ -1,11 +1,7 @@
 import type { WebSocket } from "../lib/uws";
 import { pack } from "msgpackr";
 import type uws from "../lib/uws";
-import {
-  Codes,
-  CreateHighlightMessage,
-  HighlightCreatedMessage,
-} from "./protocol";
+import { Codes, CreateHighlightMessage } from "./protocol";
 import logger from "../services/logger";
 import db from "../db/index.server";
 import { PageId, UserId } from "../db/types.server";
@@ -36,21 +32,21 @@ export function republishMessage(
 
 export async function handleCreateHighlight(
   app: uws.TemplatedApp,
-  highlightCreatorWs: WebSocket,
+  bytes: ArrayBuffer,
   msg: CreateHighlightMessage
 ) {
-  const { postId, userId, range } = msg;
+  const { userId, range, postId } = msg;
   logger.info(`Highlight for ${postId} by ${userId}`);
   await db.Page.makeHighlight(postId as PageId, {
     userId: userId as UserId,
     range,
   });
-  const opts = {
-    msg: pack({ kind: Codes.HighlightCreated } as HighlightCreatedMessage),
-    isBinary: true,
-    compress: false,
-  };
-  highlightCreatorWs.send(opts.msg, opts.isBinary, opts.compress);
+  //console.log("BEFORE REPUBLISH");
+  //console.log(bytes);
+  // See: https://stackoverflow.com/questions/72440207/why-is-my-array-buffer-suddenly-detaching
+  // (For some reason the array buffer was becoming invalid at this point)
+  // Workaround: repack the message
+  await republishMessage(app, postId, pack(msg));
 }
 
 export function handleSubscribe(ws: WebSocket, postId: string) {

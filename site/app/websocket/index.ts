@@ -16,12 +16,10 @@ const app = uWS.App({}).ws("/*", {
     invariant(isBinary, "Websocket messages must be binary");
     const unpacked = unpack(Buffer.from(bytes));
     const msg = Message.parse(unpacked);
+    //console.log("AFTER PARSE")
+    //console.log(bytes);
 
-    if (
-      msg.kind === Codes.Selection ||
-      msg.kind === Codes.CursorPosition ||
-      msg.kind === Codes.ClearSelection
-    ) {
+    if (msg.kind === Codes.Selection || msg.kind === Codes.ClearSelection) {
       const { postId } = msg;
       republishMessage(app, postId, bytes);
       //echoMessage(ws, postId, bytes);
@@ -29,7 +27,9 @@ const app = uWS.App({}).ws("/*", {
       const { postId } = msg;
       handleSubscribe(ws, postId);
     } else if (msg.kind === Codes.CreateHighlight) {
-      handleCreateHighlight(app, ws, msg);
+      //console.log("INSIDE MESSAGE")
+      //console.log(bytes)
+      handleCreateHighlight(app, bytes, msg);
     }
   },
 });

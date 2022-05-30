@@ -3,13 +3,11 @@ import zod, { z } from "zod";
 const Codes = {
   Subscribe: 0,
   Selection: 1,
-  CursorPosition: 2,
-  ClearSelection: 3,
-  CreateHighlight: 4,
+  ClearSelection: 2,
+  CreateHighlight: 3,
 
   // Never received, only sent to client
-  Subscribed: 5,
-  HighlightCreated: 6,
+  Subscribed: 4,
 } as const;
 
 export { Codes };
@@ -47,12 +45,6 @@ const ClearSelectionMessage = zod.object({
 });
 export type ClearSelectionMessage = zod.infer<typeof ClearSelectionMessage>;
 
-const CursorPositionMessage = zod.object({
-  kind: z.literal(Codes.CursorPosition),
-  postId: z.string(),
-});
-export type CursorPositionMessage = zod.infer<typeof CursorPositionMessage>;
-
 export const CreateHighlightMessage = zod.object({
   kind: z.literal(Codes.CreateHighlight),
   postId: z.string(),
@@ -61,18 +53,11 @@ export const CreateHighlightMessage = zod.object({
 });
 export type CreateHighlightMessage = zod.infer<typeof CreateHighlightMessage>;
 
-export const HighlightCreatedMessage = zod.object({
-  kind: z.literal(Codes.HighlightCreated),
-});
-export type HighlightCreatedMessage = zod.infer<typeof HighlightCreatedMessage>;
-
 export const Message = zod.union([
   SubscribeMessage,
   SubscribedMessage,
   SelectionMessage,
   ClearSelectionMessage,
-  CursorPositionMessage,
   CreateHighlightMessage,
-  HighlightCreatedMessage,
 ]);
 export type Message = zod.infer<typeof Message>;
