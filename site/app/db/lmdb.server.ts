@@ -2,6 +2,7 @@ import lmdb, { open } from "lmdb";
 import type { DB, HighlightId, PageId, Reply, UserId } from "./types.server";
 import { MAXIMUM_KEY } from "ordered-binary";
 import short from "short-uuid";
+import _ from "lodash-es";
 
 type LMDBConfig = {
   path: string;
@@ -43,6 +44,7 @@ export default class DBImpl implements DB {
       makePage: this.#makePage,
       makeHighlight: this.#makeHighlight,
       getPageWithHighlightsAndReplies: this.#getPageWithHighlightsAndReplies,
+      getPageHighlightsAndReplies: this.#getPageHighlightsAndReplies,
       makeHighlightReply: this.#makeHighlightReply,
       // Store short UUIDs directly in the DB
       slugToPageId: (x) => x as PageId,
@@ -57,30 +59,39 @@ export default class DBImpl implements DB {
   };
 
   #getPageWithHighlightsAndReplies: DB["Page"]["getPageWithHighlightsAndReplies"] =
-    (postId) => {
+    async (postId) => {
       const page = this.pages.get(postId);
       if (!page) return null;
 
-      const highlights = [
-        ...this.highlights
-          .getRange({ start: postId, end: [postId, MAXIMUM_KEY] })
-          .map(({ value, key }) => ({ ...value, id: key[1] as HighlightId })),
-      ];
-
-      return { ...page, highlights: highlights };
+      return {
+        ...page,
+        highlights: await this.#getPageHighlightsAndReplies(postId),
+      };
     };
 
-  #makeHighlight: DB["Page"]["makeHighlight"] = async (
-    postId,
-    comment
-  ): Promise<void> => {
+  #getPageHighlightsAndReplies: DB["Page"]["getPageHighlightsAndReplies"] =
+    async (postId) => {
+      type WithId = RawHighlight & { id: HighlightId };
+      const highlights = _.fromPairs<WithId>([
+        ...this.highlights
+          .getRange({ start: postId, end: [postId, MAXIMUM_KEY] })
+          .map<[HighlightId, WithId]>(({ value, key }) => [
+            key[1] as HighlightId,
+            { ...value, id: key[1] as HighlightId },
+          ]),
+      ]);
+      return highlights;
+    };
+
+  #makeHighlight: DB["Page"]["makeHighlight"] = async (postId, comment) => {
     const date = new Date();
-    const commentId = short.generate();
-    await this.highlights.put([postId, commentId], {
+    const highlightId = short.generate();
+    await this.highlights.put([postId, highlightId], {
       ...comment,
       date,
       replies: [],
     });
+    return highlightId.toString() as HighlightId;
   };
 
   #makeHighlightReply: DB["Page"]["makeHighlightReply"] = async (

@@ -5,7 +5,7 @@ import uWS from "../lib/uws";
 import {
   handleCreateHighlight,
   handleSubscribe,
-  republishMessage,
+  publishMessage,
 } from "./handlers";
 import { Message, Codes } from "./protocol";
 
@@ -16,20 +16,15 @@ const app = uWS.App({}).ws("/*", {
     invariant(isBinary, "Websocket messages must be binary");
     const unpacked = unpack(Buffer.from(bytes));
     const msg = Message.parse(unpacked);
-    //console.log("AFTER PARSE")
-    //console.log(bytes);
 
     if (msg.kind === Codes.Selection || msg.kind === Codes.ClearSelection) {
       const { postId } = msg;
-      republishMessage(app, postId, bytes);
-      //echoMessage(ws, postId, bytes);
+      publishMessage(app, postId, bytes);
     } else if (msg.kind === Codes.Subscribe) {
       const { postId } = msg;
       handleSubscribe(ws, postId);
     } else if (msg.kind === Codes.CreateHighlight) {
-      //console.log("INSIDE MESSAGE")
-      //console.log(bytes)
-      handleCreateHighlight(app, bytes, msg);
+      handleCreateHighlight(app, msg);
     }
   },
 });

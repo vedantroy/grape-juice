@@ -15,6 +15,8 @@ import {
   SelectionMessage,
   ClearSelectionMessage,
   CreateHighlightMessage,
+  HighlightCreatedMessage,
+  SubscribedMessage,
 } from "@site/websocket/protocol";
 
 // https://github.com/vitejs/vite/issues/3246
@@ -27,6 +29,9 @@ import { getSelectionUpdate, Selection } from "src/utils/selection";
 import { getUserIdOtherwiseCreateNew } from "src/utils/userId";
 import HighlightButton, { ButtonStatus } from "./highlightButton";
 import _ from "lodash-es";
+import PermanentHighlighter, {
+  PermanentHighlighterProps,
+} from "./highlighter/permanentHighlighter";
 
 // I hate the pattern of stuff something inside a "go" function
 // This is my solution
@@ -62,7 +67,7 @@ const App = () => {
     HighlightStatus.Ready
   );
   const [permanentHighlights, setPermanentHighlights] = useState<
-    TransientHighlighterProps["highlights"]
+    PermanentHighlighterProps["highlights"]
   >({});
   const [transientHighlights, setTransientHighlights] = useState<
     TransientHighlighterProps["highlights"]
@@ -77,7 +82,7 @@ const App = () => {
       const ranges = rangee.deserializeAtomic(range);
       setTransientHighlights((highlights) => ({
         ...highlights,
-        [highlightUserId]: { ranges, userId: highlightUserId },
+        [highlightUserId]: { ranges },
       }));
     },
     [userId]
@@ -93,23 +98,57 @@ const App = () => {
     [userId]
   );
 
+  const handleCreateHighlight = useCallback(
+    (msg: HighlightCreatedMessage) => {
+      const { userId: highlightUserId, range, id } = msg;
+
+      setPermanentHighlights((highlights) => ({
+        ...highlights,
+        [id]: {
+          ranges: rangee.deserializeAtomic(range),
+          userId: highlightUserId,
+        },
+      }));
+    },
+    [userId]
+  );
+
+  const handleSubscribed = useCallback(
+    (msg: SubscribedMessage) => {
+      const { highlights: newestHighlights } = msg;
+      //@ts-ignore
+      const deserialized: PermanentHighlighterProps["highlights"] = _.mapValues(
+        newestHighlights,
+        ({ range, ...rest }) => ({
+          ...rest,
+          ranges: rangee.deserializeAtomic(range),
+        })
+      ) as PermanentHighlighterProps["highlights"];
+      setPermanentHighlights((highlights) => ({
+        // TODO: Not sure if we need the spread of the old highlights here
+        ...highlights,
+        ...deserialized,
+      }));
+    },
+    [userId]
+  );
+
   useEffect(
     runAsync(async () => {
       const noMessageOrUserIdNotLoaded = !lastMessage || !userId;
       if (noMessageOrUserIdNotLoaded) return;
 
       const bytes = new Uint8Array(await lastMessage!!.data.arrayBuffer());
-      console.log(bytes);
-      const msg = Message.parse(unpack(bytes));
-
-      console.log(msg);
+      const unvalidated = unpack(bytes);
+      console.log(unvalidated);
+      const msg = Message.parse(unvalidated);
 
       const sentDirectlyToUs = !(msg as any).userId;
-      const isOurOwnMessage =
+      const wasTriggeredByUs =
         sentDirectlyToUs || (msg as any).userId === userId;
 
       if (
-        isOurOwnMessage &&
+        wasTriggeredByUs &&
         (msg.kind === Codes.Selection || msg.kind === Codes.ClearSelection)
       )
         return;
@@ -121,14 +160,18 @@ const App = () => {
         case Codes.ClearSelection:
           handleClearSelection(msg);
           break;
-        case Codes.CreateHighlight:
-          if (isOurOwnMessage) {
+        case Codes.HighlightCreated:
+          if (wasTriggeredByUs) {
             // This is prone to unituitive behavior
             // if the submission is taking a while (e.g 10 seconds)
             // the user highlights something else in the meantime
             window.getSelection()?.empty();
             setHighlightStatus(HighlightStatus.Ready);
           }
+          handleCreateHighlight(msg);
+          break;
+        case Codes.Subscribed:
+          handleSubscribed(msg);
           break;
         default:
           console.log(`Unexpected message: ${msg.kind}`);
@@ -204,6 +247,7 @@ const App = () => {
             onClick={submitSelection}
           />
         ) : null}
+        <PermanentHighlighter highlights={permanentHighlights} />
         <TransientHighlighter highlights={transientHighlights} />
         <ToastContainer pauseOnFocusLoss={false} pauseOnHover={false} />
       </ReactShadowRoot>

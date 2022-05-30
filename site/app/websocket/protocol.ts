@@ -7,7 +7,8 @@ const Codes = {
   CreateHighlight: 3,
 
   // Never received, only sent to client
-  Subscribed: 4,
+  HighlightCreated: 4,
+  Subscribed: 5,
 } as const;
 
 export { Codes };
@@ -20,9 +21,30 @@ export { Codes };
 //    (e.g a generic "CRDTChange" message)
 // But I'll need to observe & integrate the changed data regardless
 
-const SubscribedMessage = zod.object({
-  kind: z.literal(Codes.Subscribed),
+// TODO: I should remove the DB types entirely & just
+// use the types from here as the source of truth
+
+export const Reply = zod.object({
+  userId: z.string(),
+  date: z.date(),
+  text: z.string(),
 });
+export type Reply = zod.infer<typeof Reply>;
+
+export const Highlight = zod.object({
+  id: z.string(),
+  range: z.string(),
+  date: z.date(),
+  userId: z.string(),
+  replies: z.array(Reply),
+});
+export type Highlight = zod.infer<typeof Highlight>;
+
+export const SubscribedMessage = zod.object({
+  kind: z.literal(Codes.Subscribed),
+  highlights: z.record(z.string(), Highlight),
+});
+export type SubscribedMessage = zod.infer<typeof SubscribedMessage>;
 
 const SubscribeMessage = zod.object({
   kind: z.literal(Codes.Subscribe),
@@ -53,11 +75,20 @@ export const CreateHighlightMessage = zod.object({
 });
 export type CreateHighlightMessage = zod.infer<typeof CreateHighlightMessage>;
 
+export const HighlightCreatedMessage = CreateHighlightMessage.merge(
+  zod.object({
+    kind: z.literal(Codes.HighlightCreated),
+    id: z.string(),
+  })
+);
+export type HighlightCreatedMessage = zod.infer<typeof HighlightCreatedMessage>;
+
 export const Message = zod.union([
   SubscribeMessage,
   SubscribedMessage,
   SelectionMessage,
   ClearSelectionMessage,
   CreateHighlightMessage,
+  HighlightCreatedMessage,
 ]);
 export type Message = zod.infer<typeof Message>;

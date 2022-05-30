@@ -1,7 +1,12 @@
 import type { WebSocket } from "../lib/uws";
 import { pack } from "msgpackr";
 import type uws from "../lib/uws";
-import { Codes, CreateHighlightMessage } from "./protocol";
+import {
+  Codes,
+  CreateHighlightMessage,
+  HighlightCreatedMessage,
+  SubscribedMessage,
+} from "./protocol";
 import logger from "../services/logger";
 import db from "../db/index.server";
 import { PageId, UserId } from "../db/types.server";
@@ -10,7 +15,9 @@ function getPostChannel(postId: string): string {
   return `/post/${postId}`;
 }
 
-export function republishMessage(
+const VALIDATE_OUTGOING_MESSAGES = true;
+
+export function publishMessage(
   app: uws.TemplatedApp,
   postId: string,
   bytes: ArrayBuffer
@@ -32,26 +39,43 @@ export function republishMessage(
 
 export async function handleCreateHighlight(
   app: uws.TemplatedApp,
-  bytes: ArrayBuffer,
   msg: CreateHighlightMessage
 ) {
   const { userId, range, postId } = msg;
   logger.info(`Highlight for ${postId} by ${userId}`);
-  await db.Page.makeHighlight(postId as PageId, {
+  const id = await db.Page.makeHighlight(postId as PageId, {
     userId: userId as UserId,
     range,
   });
-  //console.log("BEFORE REPUBLISH");
-  //console.log(bytes);
-  // See: https://stackoverflow.com/questions/72440207/why-is-my-array-buffer-suddenly-detaching
-  // (For some reason the array buffer was becoming invalid at this point)
-  // Workaround: repack the message
-  await republishMessage(app, postId, pack(msg));
+
+  const newMsg: HighlightCreatedMessage = {
+    ...msg,
+    kind: Codes.HighlightCreated,
+    id,
+  };
+
+  if (VALIDATE_OUTGOING_MESSAGES) {
+    HighlightCreatedMessage.parse(newMsg);
+  }
+
+  await publishMessage(app, postId, pack(newMsg));
 }
 
-export function handleSubscribe(ws: WebSocket, postId: string) {
+export async function handleSubscribe(ws: WebSocket, postId: PageId) {
+  const highlights = await db.Page.getPageHighlightsAndReplies(postId);
+  if (!highlights) return null;
+
+  const msg: SubscribedMessage = {
+    kind: Codes.Subscribed,
+    highlights,
+  };
+
+  if (VALIDATE_OUTGOING_MESSAGES) {
+    SubscribedMessage.parse(msg);
+  }
+
   const opts = {
-    msg: pack({ kind: Codes.Subscribed }),
+    msg: pack(msg),
     isBinary: true,
     compress: false,
   };
