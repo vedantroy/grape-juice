@@ -8,6 +8,7 @@ import { ToastContainer, toast } from "react-toastify";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import { pack, unpack } from "msgpackr";
 import clsx from "clsx";
+import { pluckFirst, useObservable, useSubscription } from "observable-hooks";
 
 import tw from "@site/components/tw-styled";
 import {
@@ -23,23 +24,13 @@ import { Rangee } from "rangee";
 import ActiveHighlighter, { HighlighterProps } from "./highlighter";
 import { getSelectionUpdate, Selection } from "src/utils/selection";
 import { getUserIdOtherwiseCreateNew } from "src/utils/userId";
+import HighlightButton from "./highlightButton";
+import { filter, map, mergeMap, share, withLatestFrom } from "rxjs";
 
 const rangee = new Rangee({ document });
 
 const reconnectToastId = "reconnect-toast";
 const connectingToastId = "connect-toast";
-
-const HighlightButton = tw.button(`
-    absolute
-    bg-blue-400
-    hover:bg-blue-500
-    text-white
-    rounded
-    font-semibold
-    px-2
-    py-1.5
-    select-none
-`);
 
 const CHANNEL = "foobar";
 
@@ -52,28 +43,56 @@ const App = () => {
   const [highlights, setHighlights] = useState<HighlighterProps["highlights"]>(
     {}
   );
-
-  useEffect(() => {
-    if (!lastMessage) return;
-    async function go() {
-      const buf = await lastMessage!!.data.arrayBuffer();
-      const uint8 = new Uint8Array(buf);
-      const msg = Message.parse(unpack(uint8));
-      if (msg.kind === Codes.Selection) {
-        const { range, userId: highlightUserId } = msg;
-        // it's us, no need to do anything
-        if (highlightUserId === userId) return;
-        const ranges = rangee.deserializeAtomic(range);
-        setHighlights({ ...highlights, [highlightUserId]: ranges });
-      }
-    }
-    go();
-  }, [lastMessage?.data]);
-
   const [selection, setSelection] = useState<Selection | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
-  console.log(selection, userId);
+  const message$ = useObservable<Message, Array<MessageEvent | null>>(
+    (event$) =>
+      event$.pipe(
+        pluckFirst,
+        filter<MessageEvent | null, MessageEvent>(
+          (x: MessageEvent | null): x is MessageEvent => x !== null
+        ),
+        // like map but it works with promises
+        mergeMap(async (x) => {
+          const bytes = new Uint8Array(await x.data.arrayBuffer());
+          return Message.parse(unpack(bytes));
+        }),
+        share()
+      ),
+    [lastMessage]
+  );
+
+  useSubscription(
+    message$.pipe(
+      filter<Message, SelectionMessage>(
+        (x): x is SelectionMessage => x.kind === Codes.Selection
+      ),
+      filter((x) => x.userId !== userId),
+      map(({ userId, range }) => ({
+        ...highlights,
+        [userId]: rangee.deserializeAtomic(range),
+      }))
+    ),
+    (highlights) => setHighlights(highlights)
+  );
+
+  // useEffect(() => {
+  //   if (!lastMessage) return;
+  //   async function go() {
+  //     const buf = await lastMessage!!.data.arrayBuffer();
+  //     const uint8 = new Uint8Array(buf);
+  //     const msg = Message.parse(unpack(uint8));
+  //     if (msg.kind === Codes.Selection) {
+  //       const { range, userId: highlightUserId } = msg;
+  //       // it's us, no need to do anything
+  //       if (highlightUserId === userId) return;
+  //       const ranges = rangee.deserializeAtomic(range);
+  //       setHighlights({ ...highlights, [highlightUserId]: ranges });
+  //     }
+  //   }
+  //   go();
+  // }, [lastMessage?.data]);
 
   useEffect(() => {
     const onSelection = () => setSelection(getSelectionUpdate(rangee));
@@ -87,13 +106,12 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    if (readyState === ReadyState.OPEN) {
-      const msg: SubscribeMessage = {
-        kind: Codes.Subscribe,
-        postId: CHANNEL,
-      };
-      sendMessage(pack(msg), true);
-    }
+    if (readyState !== ReadyState.OPEN) return;
+    const msg: SubscribeMessage = {
+      kind: Codes.Subscribe,
+      postId: CHANNEL,
+    };
+    sendMessage(pack(msg), true);
   }, [readyState === ReadyState.OPEN]);
 
   useEffect(() => {
@@ -116,14 +134,7 @@ const App = () => {
         <style type="text/css">{styles}</style>
         {/* <style id="toastify" type="text/css"> {toastStyles}</style> */}
         {selection ? (
-          <HighlightButton
-            // This will almost never trigger, but it's here for completeness
-            // (If the user highlights text before the fingerprint loads)
-            className={clsx(
-              !userId && "bg-blue-300 hover:bg-blue-300 cursor-wait"
-            )}
-            style={{ zIndex: 9999, top: selection.y, left: selection.x }}
-          >
+          <HighlightButton disabled={!userId} x={selection.x} y={selection.y}>
             Highlight
           </HighlightButton>
         ) : null}
