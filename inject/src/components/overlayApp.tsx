@@ -2,13 +2,12 @@
 // - Ranges are stored super inefficiently
 // - No support for incremental updates, we always send the entire range
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import ReactShadowRoot from "react-shadow-root";
 import { ToastContainer, toast } from "react-toastify";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import { pack, unpack } from "msgpackr";
 import clsx from "clsx";
-import { pluckFirst, useObservable, useSubscription } from "observable-hooks";
 
 import tw from "@site/components/tw-styled";
 import {
@@ -16,6 +15,7 @@ import {
   Message,
   SubscribeMessage,
   SelectionMessage,
+  ClearSelectionMessage,
 } from "@site/websocket/protocol";
 
 // https://github.com/vitejs/vite/issues/3246
@@ -25,8 +25,17 @@ import ActiveHighlighter, { HighlighterProps } from "./highlighter";
 import { getSelectionUpdate, Selection } from "src/utils/selection";
 import { getUserIdOtherwiseCreateNew } from "src/utils/userId";
 import HighlightButton from "./highlightButton";
-import { filter, map, mergeMap, share, withLatestFrom } from "rxjs";
+import _ from "lodash-es";
 
+// I hate the pattern of stuff something inside a "go" function
+// This is my solution
+function runAsync(f: Function) {
+  return () => {
+    f();
+  };
+}
+
+const HIGHLIGHT_BUTTON_OFFSET = 50;
 const rangee = new Rangee({ document });
 
 const reconnectToastId = "reconnect-toast";
@@ -46,53 +55,59 @@ const App = () => {
   const [selection, setSelection] = useState<Selection | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
-  const message$ = useObservable<Message, Array<MessageEvent | null>>(
-    (event$) =>
-      event$.pipe(
-        pluckFirst,
-        filter<MessageEvent | null, MessageEvent>(
-          (x: MessageEvent | null): x is MessageEvent => x !== null
-        ),
-        // like map but it works with promises
-        mergeMap(async (x) => {
-          const bytes = new Uint8Array(await x.data.arrayBuffer());
-          return Message.parse(unpack(bytes));
-        }),
-        share()
-      ),
-    [lastMessage]
-  );
+  const handleSelection = useCallback(
+    (msg: SelectionMessage) => {
+      const { range, userId: highlightUserId } = msg;
+      const isOurOwnHighlight = userId === highlightUserId;
+      if (isOurOwnHighlight) return;
 
-  useSubscription(
-    message$.pipe(
-      filter<Message, SelectionMessage>(
-        (x): x is SelectionMessage => x.kind === Codes.Selection
-      ),
-      filter((x) => x.userId !== userId),
-      map(({ userId, range }) => ({
+      const ranges = rangee.deserializeAtomic(range);
+      setHighlights((highlights) => ({
         ...highlights,
-        [userId]: rangee.deserializeAtomic(range),
-      }))
-    ),
-    (highlights) => setHighlights(highlights)
+        [highlightUserId]: ranges,
+      }));
+    },
+    [userId]
   );
 
-  // useEffect(() => {
-  //   if (!lastMessage) return;
-  //   async function go() {
-  //     const buf = await lastMessage!!.data.arrayBuffer();
-  //     const uint8 = new Uint8Array(buf);
-  //     const msg = Message.parse(unpack(uint8));
-  //     if (msg.kind === Codes.Selection) {
-  //       const { range, userId: highlightUserId } = msg;
-  //       // it's us, no need to do anything
-  //       if (highlightUserId === userId) return;
-  //       const ranges = rangee.deserializeAtomic(range);
-  //       setHighlights({ ...highlights, [highlightUserId]: ranges });
-  //     }
-  //   }
-  //   go();
-  // }, [lastMessage?.data]);
+  const handleClearSelection = useCallback(
+    (msg: ClearSelectionMessage) => {
+      // TODO: Extract this out later
+      const { userId: highlightUserId } = msg;
+      const isOurOwnHighlight = userId === highlightUserId;
+      if (isOurOwnHighlight) return;
+
+      setHighlights((highlights) =>
+        _.pickBy(highlights, (_, userId) => userId !== highlightUserId)
+      );
+    },
+    [userId]
+  );
+
+  useEffect(
+    runAsync(async () => {
+      const noMessageOrUserIdNotLoaded = !lastMessage || !userId;
+      if (noMessageOrUserIdNotLoaded) return;
+
+      const bytes = new Uint8Array(await lastMessage!!.data.arrayBuffer());
+      const msg = Message.parse(unpack(bytes));
+
+      switch (msg.kind) {
+        case Codes.Selection:
+          handleSelection(msg);
+          break;
+        case Codes.ClearSelection:
+          handleClearSelection(msg);
+          break;
+        default:
+          console.log(`Unexpected message: ${msg.kind}`);
+      }
+    }),
+    // Values inside a useEffect are always fresh,
+    // so we don't need to include *all* things that could change
+    // See: https://stackoverflow.com/questions/72428900
+    [lastMessage?.data, userId]
+  );
 
   useEffect(() => {
     const onSelection = () => setSelection(getSelectionUpdate(rangee));
@@ -115,17 +130,16 @@ const App = () => {
   }, [readyState === ReadyState.OPEN]);
 
   useEffect(() => {
-    if (selection?.serializedRange && userId) {
-      const { serializedRange } = selection;
-      const msg: SelectionMessage = {
-        kind: Codes.Selection,
-        postId: CHANNEL,
-        range: serializedRange,
-        userId,
-      };
-      sendMessage(pack(msg), false);
-    } else if (userId) {
-    }
+    if (!userId) return;
+    //if (selection?.serializedRange === "QAA==") return;
+    const emptySelection = selection === null;
+    const msg = {
+      kind: emptySelection ? Codes.ClearSelection : Codes.Selection,
+      postId: CHANNEL,
+      userId,
+      ...(!emptySelection && { range: selection.serializedRange }),
+    } as SelectionMessage | ClearSelectionMessage;
+    sendMessage(pack(msg), false);
   }, [selection?.serializedRange, userId]);
 
   return (
@@ -134,7 +148,11 @@ const App = () => {
         <style type="text/css">{styles}</style>
         {/* <style id="toastify" type="text/css"> {toastStyles}</style> */}
         {selection ? (
-          <HighlightButton disabled={!userId} x={selection.x} y={selection.y}>
+          <HighlightButton
+            disabled={!userId}
+            x={selection.x + HIGHLIGHT_BUTTON_OFFSET}
+            y={selection.y}
+          >
             Highlight
           </HighlightButton>
         ) : null}

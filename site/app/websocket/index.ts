@@ -13,7 +13,11 @@ const app = uWS.App({}).ws("/*", {
     const unpacked = unpack(Buffer.from(bytes));
     const msg = Message.parse(unpacked);
 
-    if (msg.kind === Codes.Selection || msg.kind === Codes.CursorPosition) {
+    if (
+      msg.kind === Codes.Selection ||
+      msg.kind === Codes.CursorPosition ||
+      msg.kind === Codes.ClearSelection
+    ) {
       const { postId } = msg;
       republishMessage(app, postId, bytes);
       //echoMessage(ws, postId, bytes);

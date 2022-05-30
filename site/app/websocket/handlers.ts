@@ -4,22 +4,6 @@ import type uws from "../lib/uws";
 import { Codes } from "./protocol";
 import logger from "../services/logger";
 
-//export function echoMessage(
-//  ws: uws.WebSocket,
-//  postId: string,
-//  bytes: ArrayBuffer
-//) {
-//  // This is purely for readability
-//  const opts = {
-//    chan: `/post/${postId}`,
-//    bytes,
-//    isBinary: true,
-//    compress: false,
-//  };
-//  logger.info(`Echoing message`);
-//  ws.send(opts.bytes, opts.isBinary, opts.compress);
-//}
-
 export function republishMessage(
   app: uws.TemplatedApp,
   postId: string,

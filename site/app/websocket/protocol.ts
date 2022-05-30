@@ -35,8 +35,8 @@ export type SubscribeMessage = zod.infer<typeof SubscribeMessage>;
 const SelectionMessage = zod.object({
   kind: z.literal(Codes.Selection),
   postId: z.string(),
-  range: z.string(),
   userId: z.string(),
+  range: z.string(),
 });
 export type SelectionMessage = zod.infer<typeof SelectionMessage>;
 
@@ -45,6 +45,7 @@ const ClearSelectionMessage = zod.object({
   postId: z.string(),
   userId: z.string(),
 });
+export type ClearSelectionMessage = zod.infer<typeof ClearSelectionMessage>;
 
 const CursorPositionMessage = zod.object({
   kind: z.literal(Codes.CursorPosition),
@@ -56,6 +57,7 @@ export const Message = zod.union([
   SubscribeMessage,
   SubscribedMessage,
   SelectionMessage,
+  ClearSelectionMessage,
   CursorPositionMessage,
 ]);
 export type Message = zod.infer<typeof Message>;

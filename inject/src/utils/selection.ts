@@ -1,22 +1,28 @@
 import type { Rangee } from "rangee";
 
-export function getNonEmptyRange(): Range | null {
+export function getNonEmptyRangeWithText(): {
+  range: Range;
+  text: string;
+} | null {
   const selection = document.getSelection();
   // TODO: Not sure `selectedText` is every actually empty
   const selectedText = selection?.toString() || "";
   if (selection && selection.rangeCount > 0 && selectedText.length > 0) {
     const range = selection.getRangeAt(0);
-    return range.collapsed ? null : range;
+    return range.collapsed ? null : { range, text: selectedText };
   } else return null;
 }
 
+// TODO: bug:
+// In Firefox, a valid range will sometimes be serialized as
+// QAA=, which is invalid.
 function tryToSerializeRange(
   rangee: Rangee,
   range: Range | null
-): { range: Range; serialized: string } | null {
+): { serialized: string } | null {
   if (!range) return null;
   try {
-    return { range, serialized: rangee.serializeAtomic(range) };
+    return { serialized: rangee.serializeAtomic(range) };
   } catch (e) {
     return null;
   }
@@ -24,18 +30,18 @@ function tryToSerializeRange(
 
 export type Selection = { x: number; y: number; serializedRange: string };
 export function getSelectionUpdate(rangeSerializer: Rangee): null | Selection {
-  const rangeAndSerializedRange = tryToSerializeRange(
-    rangeSerializer,
-    getNonEmptyRange()
-  );
+  const rangeWithText = getNonEmptyRangeWithText();
+  if (!rangeWithText) return null;
+
+  const { range } = rangeWithText;
+  const rangeAndSerializedRange = tryToSerializeRange(rangeSerializer, range);
   if (!rangeAndSerializedRange) return null;
 
-  const { range, serialized } = rangeAndSerializedRange;
+  const { serialized } = rangeAndSerializedRange;
   const rects = range.getClientRects();
   const lastRect = rects[rects.length - 1];
-  const highlightButtonOffset = 20;
   return {
-    x: lastRect.right + highlightButtonOffset,
+    x: lastRect.right,
     y: lastRect.top,
     serializedRange: serialized,
   };
