@@ -116,6 +116,7 @@ const App = () => {
           handleClearSelection(msg);
           break;
         case Codes.HighlightCreated:
+          window.getSelection()?.empty();
           setHighlightStatus(HighlightStatus.Ready);
           break;
         default:
@@ -169,10 +170,8 @@ const App = () => {
       userId,
       range: selection.serializedRange,
     };
-    // TODO: User feedback (toast?)
     sendMessage(pack(msg), false);
     setHighlightStatus(HighlightStatus.Submitting);
-    window.getSelection()?.empty();
   }, [selection, userId]);
 
   return (
