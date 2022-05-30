@@ -79,7 +79,6 @@ export default class CursorChat {
       }
       chat.style.setProperty(
         "transform",
-        //`translate(10px, 10px)`
         `translate(${evt.pageX}px, ${evt.pageY}px)`
       );
     };

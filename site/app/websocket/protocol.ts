@@ -5,8 +5,11 @@ const Codes = {
   Selection: 1,
   CursorPosition: 2,
   ClearSelection: 3,
+  CreateHighlight: 4,
+
   // Never received, only sent to client
-  Subscribed: 4,
+  Subscribed: 5,
+  HighlightCreated: 6,
 } as const;
 
 export { Codes };
@@ -14,9 +17,6 @@ export { Codes };
 // Active Operations
 // - change highlight
 // - remove highlight
-// - move cursor
-// - send chat
-// - expire chat
 // Why not use CRDT?
 // - With a CRDT I'll only need to transmit one type of update
 //    (e.g a generic "CRDTChange" message)
@@ -53,11 +53,26 @@ const CursorPositionMessage = zod.object({
 });
 export type CursorPositionMessage = zod.infer<typeof CursorPositionMessage>;
 
+export const CreateHighlightMessage = zod.object({
+  kind: z.literal(Codes.CreateHighlight),
+  postId: z.string(),
+  userId: z.string(),
+  range: z.string(),
+});
+export type CreateHighlightMessage = zod.infer<typeof CreateHighlightMessage>;
+
+export const HighlightCreatedMessage = zod.object({
+  kind: z.literal(Codes.HighlightCreated),
+});
+export type HighlightCreatedMessage = zod.infer<typeof HighlightCreatedMessage>;
+
 export const Message = zod.union([
   SubscribeMessage,
   SubscribedMessage,
   SelectionMessage,
   ClearSelectionMessage,
   CursorPositionMessage,
+  CreateHighlightMessage,
+  HighlightCreatedMessage,
 ]);
 export type Message = zod.infer<typeof Message>;

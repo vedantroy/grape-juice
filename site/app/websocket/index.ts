@@ -2,7 +2,11 @@ import { unpack } from "msgpackr";
 import invariant from "tiny-invariant";
 // Seems like tsx does not respect import maps
 import uWS from "../lib/uws";
-import { handleSubscribe, republishMessage } from "./handlers";
+import {
+  handleCreateHighlight,
+  handleSubscribe,
+  republishMessage,
+} from "./handlers";
 import { Message, Codes } from "./protocol";
 
 const PORT = 9001;
@@ -24,6 +28,8 @@ const app = uWS.App({}).ws("/*", {
     } else if (msg.kind === Codes.Subscribe) {
       const { postId } = msg;
       handleSubscribe(ws, postId);
+    } else if (msg.kind === Codes.CreateHighlight) {
+      handleCreateHighlight(app, ws, msg);
     }
   },
 });

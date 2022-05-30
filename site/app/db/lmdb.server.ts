@@ -1,5 +1,5 @@
 import lmdb, { open } from "lmdb";
-import type { DB, PageId } from "./types.server";
+import type { DB, HighlightId, PageId, Reply, UserId } from "./types.server";
 import { MAXIMUM_KEY } from "ordered-binary";
 import short from "short-uuid";
 
@@ -14,17 +14,18 @@ type RawPage = {
   date: Date;
 };
 
-type RawComment = {
-  userId: string;
-  text: string;
+type RawHighlight = {
+  userId: UserId;
   date: Date;
+  range: string;
+  replies: Reply[];
 };
 
 const STRUCTURES_KEY = Symbol.for("structures");
 
 export default class DBImpl implements DB {
   pages: lmdb.Database<RawPage, string>;
-  comments: lmdb.Database<RawComment, [string, string]>;
+  highlights: lmdb.Database<RawHighlight, [string, string]>;
   Page: DB["Page"];
   translator: short.Translator;
 
@@ -34,14 +35,15 @@ export default class DBImpl implements DB {
       name: "Page",
       sharedStructuresKey: STRUCTURES_KEY,
     });
-    this.comments = root.openDB({
-      name: "Comment",
+    this.highlights = root.openDB({
+      name: "Highlight",
       sharedStructuresKey: STRUCTURES_KEY,
     });
     this.Page = {
       makePage: this.#makePage,
-      makeComment: this.#makeComment,
-      getPageWithComments: this.#getPageWithComments,
+      makeHighlight: this.#makeHighlight,
+      getPageWithHighlightsAndReplies: this.#getPageWithHighlightsAndReplies,
+      makeHighlightReply: this.#makeHighlightReply,
       // Store short UUIDs directly in the DB
       slugToPageId: (x) => x as PageId,
     };
@@ -54,25 +56,46 @@ export default class DBImpl implements DB {
     return postId as string as PageId;
   };
 
-  #getPageWithComments: DB["Page"]["getPageWithComments"] = (postId) => {
-    const page = this.pages.get(postId);
-    if (!page) return null;
+  #getPageWithHighlightsAndReplies: DB["Page"]["getPageWithHighlightsAndReplies"] =
+    (postId) => {
+      const page = this.pages.get(postId);
+      if (!page) return null;
 
-    const comments = [
-      ...this.comments
-        .getRange({ start: postId, end: [postId, MAXIMUM_KEY] })
-        .map((x) => x.value),
-    ];
+      const highlights = [
+        ...this.highlights
+          .getRange({ start: postId, end: [postId, MAXIMUM_KEY] })
+          .map(({ value, key }) => ({ ...value, id: key[1] as HighlightId })),
+      ];
 
-    return { ...page, comments: comments };
-  };
+      return { ...page, highlights: highlights };
+    };
 
-  #makeComment: DB["Page"]["makeComment"] = async (
+  #makeHighlight: DB["Page"]["makeHighlight"] = async (
     postId,
     comment
   ): Promise<void> => {
     const date = new Date();
     const commentId = short.generate();
-    await this.comments.put([postId, commentId], { ...comment, date });
+    await this.highlights.put([postId, commentId], {
+      ...comment,
+      date,
+      replies: [],
+    });
+  };
+
+  #makeHighlightReply: DB["Page"]["makeHighlightReply"] = async (
+    postId,
+    { userId, highlightId, text }
+  ): Promise<void> => {
+    await this.highlights.transaction(async () => {
+      const highlight = this.highlights.get([postId, highlightId]);
+      if (!highlight) return;
+
+      const newHighlight = {
+        ...highlight,
+        replies: [...highlight.replies, { text, date: new Date(), userId }],
+      };
+      await this.highlights.put([postId, highlightId], newHighlight);
+    });
   };
 }

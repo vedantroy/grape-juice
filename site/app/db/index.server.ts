@@ -1,6 +1,6 @@
 import LMDBImpl from "./lmdb.server";
 import { DB } from "./types.server";
-import { IS_PRODUCTION } from "~/services/env";
+import { IS_PRODUCTION } from "..//services/env";
 
 // Choose which DB implementation to use
 let DBImpl = LMDBImpl;

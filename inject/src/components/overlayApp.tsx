@@ -7,24 +7,25 @@ import ReactShadowRoot from "react-shadow-root";
 import { ToastContainer, toast } from "react-toastify";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import { pack, unpack } from "msgpackr";
-import clsx from "clsx";
 
-import tw from "@site/components/tw-styled";
 import {
   Codes,
   Message,
   SubscribeMessage,
   SelectionMessage,
   ClearSelectionMessage,
+  CreateHighlightMessage,
 } from "@site/websocket/protocol";
 
 // https://github.com/vitejs/vite/issues/3246
 import styles from "../index.css?inline";
 import { Rangee } from "rangee";
-import ActiveHighlighter, { HighlighterProps } from "./highlighter";
+import TransientHighlighter, {
+  TransientHighlighterProps,
+} from "./highlighter/transientHighlighter";
 import { getSelectionUpdate, Selection } from "src/utils/selection";
 import { getUserIdOtherwiseCreateNew } from "src/utils/userId";
-import HighlightButton from "./highlightButton";
+import HighlightButton, { ButtonStatus } from "./highlightButton";
 import _ from "lodash-es";
 
 // I hate the pattern of stuff something inside a "go" function
@@ -43,15 +44,30 @@ const connectingToastId = "connect-toast";
 
 const CHANNEL = "foobar";
 
+const HighlightStatus = {
+  Ready: "ready",
+  Submitting: "submitting",
+  // This status is not used
+  Finished: "finished",
+} as const;
+type HighlightStatus = typeof HighlightStatus[keyof typeof HighlightStatus];
+
 const App = () => {
   const { sendMessage, lastMessage, readyState } = useWebSocket(
     `ws://localhost:9001/${CHANNEL}`,
     {}
   );
 
-  const [highlights, setHighlights] = useState<HighlighterProps["highlights"]>(
-    {}
+  const [highlightStatus, setHighlightStatus] = useState<HighlightStatus>(
+    HighlightStatus.Ready
   );
+  const [permanentHighlights, setPermanentHighlights] = useState<
+    TransientHighlighterProps["highlights"]
+  >({});
+  const [transientHighlights, setTransientHighlights] = useState<
+    TransientHighlighterProps["highlights"]
+  >({});
+
   const [selection, setSelection] = useState<Selection | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -62,9 +78,9 @@ const App = () => {
       if (isOurOwnHighlight) return;
 
       const ranges = rangee.deserializeAtomic(range);
-      setHighlights((highlights) => ({
+      setTransientHighlights((highlights) => ({
         ...highlights,
-        [highlightUserId]: ranges,
+        [highlightUserId]: { ranges, userId: highlightUserId },
       }));
     },
     [userId]
@@ -77,7 +93,7 @@ const App = () => {
       const isOurOwnHighlight = userId === highlightUserId;
       if (isOurOwnHighlight) return;
 
-      setHighlights((highlights) =>
+      setTransientHighlights((highlights) =>
         _.pickBy(highlights, (_, userId) => userId !== highlightUserId)
       );
     },
@@ -98,6 +114,9 @@ const App = () => {
           break;
         case Codes.ClearSelection:
           handleClearSelection(msg);
+          break;
+        case Codes.HighlightCreated:
+          setHighlightStatus(HighlightStatus.Ready);
           break;
         default:
           console.log(`Unexpected message: ${msg.kind}`);
@@ -142,6 +161,20 @@ const App = () => {
     sendMessage(pack(msg), false);
   }, [selection?.serializedRange, userId]);
 
+  const submitSelection = useCallback(() => {
+    if (!userId || !selection) return;
+    const msg: CreateHighlightMessage = {
+      kind: Codes.CreateHighlight,
+      postId: CHANNEL,
+      userId,
+      range: selection.serializedRange,
+    };
+    // TODO: User feedback (toast?)
+    sendMessage(pack(msg), false);
+    setHighlightStatus(HighlightStatus.Submitting);
+    window.getSelection()?.empty();
+  }, [selection, userId]);
+
   return (
     <div>
       <ReactShadowRoot>
@@ -149,14 +182,19 @@ const App = () => {
         {/* <style id="toastify" type="text/css"> {toastStyles}</style> */}
         {selection ? (
           <HighlightButton
-            disabled={!userId}
+            status={
+              !userId
+                ? ButtonStatus.Initializing
+                : highlightStatus === HighlightStatus.Submitting
+                ? ButtonStatus.Submitting
+                : ButtonStatus.Ready
+            }
             x={selection.x + HIGHLIGHT_BUTTON_OFFSET}
             y={selection.y}
-          >
-            Highlight
-          </HighlightButton>
+            onClick={submitSelection}
+          />
         ) : null}
-        <ActiveHighlighter highlights={highlights} />
+        <TransientHighlighter highlights={transientHighlights} />
         <ToastContainer pauseOnFocusLoss={false} pauseOnHover={false} />
       </ReactShadowRoot>
     </div>

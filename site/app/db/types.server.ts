@@ -7,25 +7,46 @@ export type Page = {
   url: string;
   title: string;
   date: Date;
-  comments: Comment[];
+  highlights: Array<Highlight & { replies: Reply[] }>;
 };
 
 // just store the entire array -- it's easier
 export type UserId = Brand<string, "UserId">;
-export type Comment = {
-  userId: string;
-  text: string;
+
+export type HighlightId = Brand<string, "HighlightId">;
+export type Highlight = {
+  id: HighlightId;
+  userId: UserId;
+  // currently not displayed in the UI
   date: Date;
+  range: string;
+};
+
+export type Reply = {
+  userId: UserId;
+  date: Date;
+
+  text: string;
 };
 
 export interface DB {
   Page: {
     slugToPageId(slug: string): PageId;
     makePage(args: Pick<Page, "html" | "url" | "title">): Promise<PageId>;
-    getPageWithComments(id: PageId): Promise<Page | null> | Page | null;
-    makeComment(
+    getPageWithHighlightsAndReplies(
+      id: PageId
+    ): Promise<Page | null> | Page | null;
+    makeHighlight(
       id: PageId,
-      comment: { userId: UserId; text: string }
+      highlight: { userId: UserId; range: string }
+    ): Promise<void>;
+    makeHighlightReply(
+      id: PageId,
+      reply: {
+        userId: UserId;
+        highlightId: HighlightId;
+        text: string;
+      }
     ): Promise<void>;
   };
 }
