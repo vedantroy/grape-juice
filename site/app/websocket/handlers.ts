@@ -41,11 +41,12 @@ export async function handleCreateHighlight(
   app: uws.TemplatedApp,
   msg: CreateHighlightMessage
 ) {
-  const { userId, range, postId } = msg;
+  const { userId, range, postId, containerSelector } = msg;
   logger.info(`Highlight for ${postId} by ${userId}`);
   const id = await db.Page.makeHighlight(postId as PageId, {
     userId: userId as UserId,
     range,
+    containerSelector,
   });
 
   const newMsg: HighlightCreatedMessage = {

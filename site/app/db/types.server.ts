@@ -26,6 +26,7 @@ export type Highlight = {
   // currently not displayed in the UI
   date: Date;
   range: string;
+  containerSelector: string;
 };
 
 export type Reply = {
@@ -47,7 +48,7 @@ export interface DB {
     ): MaybePromise<HighlightsWithReplies>;
     makeHighlight(
       id: PageId,
-      highlight: { userId: UserId; range: string }
+      highlight: { userId: UserId; range: string; containerSelector: string }
     ): MaybePromise<HighlightId>;
     makeHighlightReply(
       id: PageId,

@@ -11,9 +11,14 @@ type Rect = {
 export type HighlightProps = {
   rects: Rect[];
   opacity: "low" | "medium" | "high";
+  color: string;
 };
 
-export const Highlight: React.FC<HighlightProps> = ({ rects, opacity }) => {
+export const Highlight: React.FC<HighlightProps> = ({
+  rects,
+  opacity,
+  color,
+}) => {
   return (
     <>
       {rects.map(({ x, y, width, height }, i) => (
@@ -22,12 +27,12 @@ export const Highlight: React.FC<HighlightProps> = ({ rects, opacity }) => {
           // the order of the rects shouldn't change??
           key={i}
           className={clsx(
-            `pointer-events-none absolute bg-sky-500 z-10`,
-            opacity === "low" && "opacity-10",
-            opacity === "medium" && "opacity-30",
-            opacity === "high" && "opacity-50"
+            `pointer-events-none absolute z-10`,
+            opacity === "low" && "opacity-30",
+            opacity === "medium" && "opacity-50",
+            opacity === "high" && "opacity-70"
           )}
-          style={{ top: y, left: x, width, height }}
+          style={{ top: y, left: x, width, height, background: color }}
         ></div>
       ))}
     </>

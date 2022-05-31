@@ -1,6 +1,7 @@
 import type { UserId } from "@site/db/types.server";
 import * as _ from "lodash-es";
 import React from "react";
+import { getColorFromUserId } from "src/utils/userId";
 import { Container } from "./container";
 import { Highlight } from "./highlight";
 
@@ -23,7 +24,12 @@ export default function TransientHighlighter({
       {userIdToRects.map(([userId, { rects }]) => (
         // We can use userId as the key because each user will
         // only have 1 transient highlight at a time
-        <Highlight key={userId} rects={rects} opacity="low" />
+        <Highlight
+          key={userId}
+          color={getColorFromUserId(userId)}
+          rects={rects}
+          opacity="low"
+        />
       ))}
     </Container>
   );

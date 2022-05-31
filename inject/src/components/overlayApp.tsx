@@ -7,6 +7,7 @@ import ReactShadowRoot from "react-shadow-root";
 import { ToastContainer, toast } from "react-toastify";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import { pack, unpack } from "msgpackr";
+import { finder } from "@medv/finder";
 
 import {
   Codes,
@@ -26,12 +27,18 @@ import TransientHighlighter, {
   TransientHighlighterProps,
 } from "./highlighter/transientHighlighter";
 import { getSelectionUpdate, Selection } from "src/utils/selection";
-import { getUserIdOtherwiseCreateNew } from "src/utils/userId";
+import {
+  getColorFromUserId,
+  getUserIdOtherwiseCreateNew,
+} from "src/utils/userId";
 import HighlightButton, { ButtonStatus } from "./highlightButton";
 import _ from "lodash-es";
 import PermanentHighlighter, {
+  PermanentHighlight,
   PermanentHighlighterProps,
 } from "./highlighter/permanentHighlighter";
+import { UserId } from "@site/db/types.server";
+import CursorChat from "src/vendor/cursor-chat";
 
 // I hate the pattern of stuff something inside a "go" function
 // This is my solution
@@ -76,6 +83,12 @@ const App = () => {
   const [selection, setSelection] = useState<Selection | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!userId) return;
+    const color = getColorFromUserId(userId as UserId);
+    new CursorChat("ws://localhost:1234", color);
+  }, [userId]);
+
   const handleSelection = useCallback(
     (msg: SelectionMessage) => {
       const { range, userId: highlightUserId } = msg;
@@ -98,16 +111,19 @@ const App = () => {
     [userId]
   );
 
-  const handleCreateHighlight = useCallback(
+  const handleHighlightCreated = useCallback(
     (msg: HighlightCreatedMessage) => {
-      const { userId: highlightUserId, range, id } = msg;
+      const { userId: highlightUserId, range, id, containerSelector } = msg;
+
+      const highlight: PermanentHighlight = {
+        ranges: rangee.deserializeAtomic(range),
+        userId: highlightUserId as UserId,
+        containerSelector,
+      };
 
       setPermanentHighlights((highlights) => ({
         ...highlights,
-        [id]: {
-          ranges: rangee.deserializeAtomic(range),
-          userId: highlightUserId,
-        },
+        [id]: highlight,
       }));
     },
     [userId]
@@ -116,7 +132,7 @@ const App = () => {
   const handleSubscribed = useCallback(
     (msg: SubscribedMessage) => {
       const { highlights: newestHighlights } = msg;
-      //@ts-ignore
+      //@ts-ignore -- really should fix this, this has caused at least one bug so far
       const deserialized: PermanentHighlighterProps["highlights"] = _.mapValues(
         newestHighlights,
         ({ range, ...rest }) => ({
@@ -140,7 +156,6 @@ const App = () => {
 
       const bytes = new Uint8Array(await lastMessage!!.data.arrayBuffer());
       const unvalidated = unpack(bytes);
-      console.log(unvalidated);
       const msg = Message.parse(unvalidated);
 
       const sentDirectlyToUs = !(msg as any).userId;
@@ -168,7 +183,7 @@ const App = () => {
             window.getSelection()?.empty();
             setHighlightStatus(HighlightStatus.Ready);
           }
-          handleCreateHighlight(msg);
+          handleHighlightCreated(msg);
           break;
         case Codes.Subscribed:
           handleSubscribed(msg);
@@ -218,14 +233,24 @@ const App = () => {
 
   const submitSelection = useCallback(() => {
     if (!userId || !selection) return;
+
+    setHighlightStatus(HighlightStatus.Submitting);
+    const selector = finder(selection.container, {
+      // try to find super short selector
+      // by raising number of tries
+      maxNumberOfTries: 3000,
+    });
+    // TODO: We should maybe try the selector (unless
+    // the library guarantees the selector is valid ??)
+
     const msg: CreateHighlightMessage = {
       kind: Codes.CreateHighlight,
       postId: CHANNEL,
       userId,
       range: selection.serializedRange,
+      containerSelector: selector,
     };
     sendMessage(pack(msg), false);
-    setHighlightStatus(HighlightStatus.Submitting);
   }, [selection, userId]);
 
   return (

@@ -22,13 +22,26 @@ function tryToSerializeRange(
 ): { serialized: string } | null {
   if (!range) return null;
   try {
-    return { serialized: rangee.serializeAtomic(range) };
+    const serialized = rangee.serializeAtomic(range);
+    try {
+      // Make sure the range can be round-tripped
+      // TODO: Verify this fixes a bug
+      rangee.deserializeAtomic(serialized);
+    } catch (e) {
+      return null;
+    }
+    return { serialized };
   } catch (e) {
     return null;
   }
 }
 
-export type Selection = { x: number; y: number; serializedRange: string };
+export type Selection = {
+  x: number;
+  y: number;
+  serializedRange: string;
+  container: HTMLElement;
+};
 export function getSelectionUpdate(rangeSerializer: Rangee): null | Selection {
   const rangeWithText = getNonEmptyRangeWithText();
   if (!rangeWithText) return null;
@@ -40,9 +53,21 @@ export function getSelectionUpdate(rangeSerializer: Rangee): null | Selection {
   const { serialized } = rangeAndSerializedRange;
   const rects = range.getClientRects();
   const lastRect = rects[rects.length - 1];
+
+  const { commonAncestorContainer: c } = range;
+  const commonAncestorNotTextNode =
+    c.nodeType === Node.TEXT_NODE ? c.parentElement : c;
+  if (
+    // TODO: These checks might be disallowing valid ranges
+    !commonAncestorNotTextNode ||
+    !(commonAncestorNotTextNode instanceof HTMLElement)
+  )
+    return null;
+
   return {
     x: lastRect.right,
     y: lastRect.top,
     serializedRange: serialized,
+    container: commonAncestorNotTextNode,
   };
 }

@@ -37,6 +37,7 @@ export const Highlight = zod.object({
   date: z.date(),
   userId: z.string(),
   replies: z.array(Reply),
+  containerSelector: z.string(),
 });
 export type Highlight = zod.infer<typeof Highlight>;
 
@@ -55,7 +56,7 @@ export type SubscribeMessage = zod.infer<typeof SubscribeMessage>;
 const SelectionMessage = zod.object({
   kind: z.literal(Codes.Selection),
   postId: z.string(),
-  userId: z.string(),
+  userId: z.string().uuid(),
   range: z.string(),
 });
 export type SelectionMessage = zod.infer<typeof SelectionMessage>;
@@ -63,15 +64,16 @@ export type SelectionMessage = zod.infer<typeof SelectionMessage>;
 const ClearSelectionMessage = zod.object({
   kind: z.literal(Codes.ClearSelection),
   postId: z.string(),
-  userId: z.string(),
+  userId: z.string().uuid(),
 });
 export type ClearSelectionMessage = zod.infer<typeof ClearSelectionMessage>;
 
 export const CreateHighlightMessage = zod.object({
   kind: z.literal(Codes.CreateHighlight),
   postId: z.string(),
-  userId: z.string(),
+  userId: z.string().uuid(),
   range: z.string(),
+  containerSelector: z.string(),
 });
 export type CreateHighlightMessage = zod.infer<typeof CreateHighlightMessage>;
 

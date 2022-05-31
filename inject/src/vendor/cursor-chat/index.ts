@@ -10,7 +10,6 @@ import "./index.css";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 import { nanoid } from "nanoid";
-import randomcolor from "randomcolor";
 import { PerfectCursor } from "perfect-cursors";
 
 interface Cursor {
@@ -56,9 +55,10 @@ export default class CursorChat {
     // initialize self
     this.me = {
       id: this.self_id,
-      color: randomcolor({
-        luminosity: "light",
-      }),
+      color,
+      //color: randomcolor({
+      //  luminosity: "light",
+      //}),
       x: 0,
       y: 0,
       chat: "",

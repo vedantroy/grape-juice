@@ -16,6 +16,7 @@ type RawPage = {
 };
 
 type RawHighlight = {
+  containerSelector: string;
   userId: UserId;
   date: Date;
   range: string;
