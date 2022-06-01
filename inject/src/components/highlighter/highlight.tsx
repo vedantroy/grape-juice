@@ -1,12 +1,6 @@
 import clsx from "clsx";
 import React from "react";
-
-type Rect = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
+import { Rect } from "./sharedTypes";
 
 export type HighlightProps = {
   rects: Rect[];
@@ -21,7 +15,7 @@ export const Highlight: React.FC<HighlightProps> = ({
 }) => {
   return (
     <>
-      {rects.map(({ x, y, width, height }, i) => (
+      {rects.map(({ left, top, width, height }, i) => (
         <div
           // using index as a key is is not generally good, but
           // the order of the rects shouldn't change??
@@ -32,7 +26,7 @@ export const Highlight: React.FC<HighlightProps> = ({
             opacity === "medium" && "opacity-50",
             opacity === "high" && "opacity-70"
           )}
-          style={{ top: y, left: x, width, height, background: color }}
+          style={{ top, left, width, height, background: color }}
         ></div>
       ))}
     </>
