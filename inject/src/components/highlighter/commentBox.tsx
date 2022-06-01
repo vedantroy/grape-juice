@@ -1,11 +1,17 @@
 import { HighlightId } from "@site/db/types.server";
-import clsx from "clsx";
-import _ from "lodash-es";
-import React, { useLayoutEffect, useRef } from "react";
-import { useEffect, useMemo, useState } from "react";
-import invariant from "tiny-invariant";
+import _, { xor } from "lodash-es";
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Container } from "./container";
 import { DeserializedPermanentHighlight } from "./sharedTypes";
+import Comment from "./comment";
+import invariant from "tiny-invariant";
+import { PermanentHighlight } from "./permanentHighlighter";
 
 type Rect = { left: number; top: number; width: number; height: number };
 const right = (r: Rect) => r.left + r.width;
@@ -32,90 +38,149 @@ function getCommentHandleX(container: Element) {
   );
 }
 
-function getIdealY(rects: Rect[]) {
-  return _.min(rects.map((r) => r.top));
+function getIdealY(rects: Rect[]): number {
+  const min = _.min(rects.map((r) => r.top));
+  // TODO: Don't use an invariant, just skip
+  invariant(min !== undefined, `no rects`);
+  return min;
 }
 
-const COMMENT_CLASS = "comment-container";
+function getHighlightTopAndLeft(rects: Rect[]): { left: number; top: number } {
+  let left = Infinity;
+  let top = Infinity;
+  for (const rect of rects) {
+    left = Math.min(left, rect.left);
+    top = Math.min(top, rect.top);
+  }
+
+  invariant(left !== Infinity, `no rects`);
+  invariant(top !== Infinity, `no rects`);
+
+  return { left, top };
+}
+
+type IdToHeight = Record<HighlightId, number>;
+type IdWithTopAndLeft = {
+  id: HighlightId;
+  top: number;
+  left: number;
+};
+type IdWithDimensions = IdWithTopAndLeft & { height: number };
+
+function sortByYAndTieBreakonX(xs: IdWithTopAndLeft[]) {
+  xs.sort((a, b) => {
+    // > 0	sort a after b
+    // < 0	sort a before b
+    // === 0	keep original order of a and b
+    const sameY = a.top === b.top;
+    return sameY ? a.left - b.left : a.top - b.top;
+  });
+}
+
+function getActualYs({
+  XYs: beforeCopy,
+  idToHeight,
+}: {
+  XYs: IdWithTopAndLeft[];
+  idToHeight: IdToHeight;
+}): Record<HighlightId, number> {
+  const XYs = [...beforeCopy];
+  sortByYAndTieBreakonX(XYs);
+  const XYsWithHeight = XYs.map((x) => ({ ...x, height: idToHeight[x.id] }));
+
+  const placements = [XYsWithHeight[0]];
+  const bottom = (x: IdWithDimensions) => x.top + x.height;
+
+  const PADDING_BETWEEN_COMMENTS_PX = 20;
+
+  function shiftUp(by: number) {
+    for (let i = placements.length - 1; i > 0; --i) {
+      const cur = placements[i];
+      const prev = i >= 0 ? placements[i - 1] : null;
+      cur.top -= by;
+      const noCommentAboveCur = prev === null;
+      if (noCommentAboveCur) return;
+      const minimumTop = bottom(prev) + PADDING_BETWEEN_COMMENTS_PX;
+      if (minimumTop > cur.top) {
+        const overshoot = minimumTop - cur.top;
+        by = overshoot;
+      } else break;
+    }
+  }
+
+  for (let i = 1; i < XYsWithHeight.length; i++) {
+    const prev = XYsWithHeight[i - 1];
+    const cur = XYsWithHeight[i];
+
+    if (bottom(prev) + PADDING_BETWEEN_COMMENTS_PX < cur.top) {
+      placements.push(cur);
+    } else {
+      // call shiftup
+    }
+  }
+
+  return {};
+}
 
 export default function ({ highlights }: CommentBoxProps) {
+  invariant(highlights.length > 0, "no highlights");
+
   const rightMostCommentHandleOffset = useMemo(
     () => _.max(highlights.map((h) => getCommentHandleX(h.container))),
     [highlights]
-  );
+  ) as number;
 
-  const idealYs = useMemo(
-    () => highlights.map((h) => getIdealY(h.rects)),
+  const highlightXYs = useMemo(
+    () =>
+      highlights.map(({ rects, id }) => ({
+        ...getHighlightTopAndLeft(rects),
+        id,
+      })),
     [highlights]
   );
 
-  const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
-
   const [showComments, setShowComments] = useState(false);
 
-  //const [idToElement, setIdToElement] = useState<
-  //  Record<HighlightId, HTMLElement> & { size: number }
-  //>({ size: 0 });
-
   const idToElement = useRef<Record<HighlightId, HTMLElement>>({});
-  const [idToHeight, setIdToHeight] = useState<Record<HighlightId, number>>({});
+  const [idToHeight, setIdToHeight] = useState<IdToHeight>({});
 
-  const [commentBoxHeights, setCommentBoxHeights] = useState<number[]>([]);
+  // onChange => update comment heights
+  // usEffect => reflow
 
-  // Options:
-  // 1. do useLayoutEffect & gather all heights
-  //   - we set heights & run reflow algorithim
-  //   - whenever the height of a child element changes, we also call the function
-  //  that useLayoutEffect is running
-  // 2. use resize observer on all the children (we might have to do this anyway)
-  // whenever a dimension changes, update the commentBoxHeights
-  //   run the reflow algorithim
-  // seems like option 2 is better because we need to use the resize observer
-  // anyways. Option 1 has the advantage of collecting the heights in one pass
-  // but ... I don't think that's a bottleneck for anything because we
-  // only run the reflow algorithim if once all comments have been rendered
+  useEffect(
+    () => {
+      if (_.keys(idToHeight).length !== highlights.length) return;
 
-  // TODO: This could just be a `useEffect` instead maybe?
-  useLayoutEffect(() => {
-    if (!containerRef) return;
+      //const heights = highlights.map((h) => {
+      //  const height = idToHeight[h.id];
+      //  invariant(height !== undefined, `missing height for ${h.id}`);
+      //  return height;
+      //});
 
-    const commentElements = containerRef.getElementsByClassName(COMMENT_CLASS);
-    const allCommentsRendered = commentElements.length === highlights.length;
-    if (!allCommentsRendered) return;
+      const actualYs = getActualYs({
+        XYs: highlightXYs,
+        idToHeight,
+      });
 
-    // whenever the highlights array changes, we update
-  }, [highlights, containerRef]);
-
-  useEffect(() => {
-    if (_.keys(idToHeight).length !== highlights.length) return;
-  }, [idToHeight]);
+      console.log(idToHeight);
+    },
+    // Don't include `idealYs` b/c if new highlights are added,
+    // idToHeight will be changed anyways
+    [idToHeight]
+  );
 
   return (
-    <Container ref={(ref) => ref && setContainerRef(ref)}>
+    <Container>
       {highlights.map((h) => (
-        <div
+        <Comment
+          onHeightChanged={(newHeight) =>
+            setIdToHeight((old) => ({ ...old, [h.id]: newHeight }))
+          }
           key={h.id}
-          //ref={(ref) => {
-          //  console.log("setting");
-          //  if (!ref) {
-          //    delete idToElement.current[h.id];
-          //    setIdToHeight((old) => _.pickBy(old, (_, k) => k !== h.id));
-          //    return;
-          //  }
-          //  idToElement.current[h.id] = ref;
-          //  setIdToHeight((old) => ({
-          //    ...old,
-          //    [h.id]: ref.clientHeight,
-          //  }));
-          //}}
-          className={clsx(
-            "absolute z-50 bg-black h-5 w-5",
-            !showComments && "hidden",
-            COMMENT_CLASS
-          )}
-          data-highlight-id={h.id}
-          style={{ top: 100, left: rightMostCommentHandleOffset }}
-        ></div>
+          visible={showComments}
+          x={rightMostCommentHandleOffset}
+          y={100}
+        />
       ))}
     </Container>
   );

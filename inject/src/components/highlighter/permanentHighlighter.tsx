@@ -29,6 +29,8 @@ function getContainerElement(containerSelector: string): Element {
 export default function PermanentHighlighter({
   highlights,
 }: PermanentHighlighterProps) {
+  if (_.isEmpty(highlights)) return null;
+
   const deserializedHighlights: DeserializedPermanentHighlight[] = _.toPairs(
     highlights
   ).map(([id, { userId, ranges, containerSelector }]) => ({

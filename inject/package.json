@@ -44,6 +44,7 @@
     "rxjs": "^7.5.5",
     "short-uuid": "^4.2.0",
     "tiny-invariant": "^1.2.0",
+    "use-resize-observer": "^9.0.0",
     "y-websocket": "^1.4.3",
     "yjs": "^13.5.38"
   }
