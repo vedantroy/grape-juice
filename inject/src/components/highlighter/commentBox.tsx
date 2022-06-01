@@ -1,7 +1,7 @@
 import { HighlightId } from "@site/db/types.server";
 import clsx from "clsx";
 import _ from "lodash-es";
-import React, { useRef } from "react";
+import React, { useLayoutEffect, useRef } from "react";
 import { useEffect, useMemo, useState } from "react";
 import invariant from "tiny-invariant";
 import { Container } from "./container";
@@ -36,18 +36,20 @@ function getIdealY(rects: Rect[]) {
   return _.min(rects.map((r) => r.top));
 }
 
+const COMMENT_CLASS = "comment-container";
+
 export default function ({ highlights }: CommentBoxProps) {
   const rightMostCommentHandleOffset = useMemo(
     () => _.max(highlights.map((h) => getCommentHandleX(h.container))),
     [highlights]
   );
 
-  console.log(rightMostCommentHandleOffset);
-
   const idealYs = useMemo(
     () => highlights.map((h) => getIdealY(h.rects)),
     [highlights]
   );
+
+  const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
 
   const [showComments, setShowComments] = useState(false);
 
@@ -56,37 +58,62 @@ export default function ({ highlights }: CommentBoxProps) {
   //>({ size: 0 });
 
   const idToElement = useRef<Record<HighlightId, HTMLElement>>({});
-
   const [idToHeight, setIdToHeight] = useState<Record<HighlightId, number>>({});
 
   const [commentBoxHeights, setCommentBoxHeights] = useState<number[]>([]);
+
+  // Options:
+  // 1. do useLayoutEffect & gather all heights
+  //   - we set heights & run reflow algorithim
+  //   - whenever the height of a child element changes, we also call the function
+  //  that useLayoutEffect is running
+  // 2. use resize observer on all the children (we might have to do this anyway)
+  // whenever a dimension changes, update the commentBoxHeights
+  //   run the reflow algorithim
+  // seems like option 2 is better because we need to use the resize observer
+  // anyways. Option 1 has the advantage of collecting the heights in one pass
+  // but ... I don't think that's a bottleneck for anything because we
+  // only run the reflow algorithim if once all comments have been rendered
+
+  // TODO: This could just be a `useEffect` instead maybe?
+  useLayoutEffect(() => {
+    if (!containerRef) return;
+
+    const commentElements = containerRef.getElementsByClassName(COMMENT_CLASS);
+    const allCommentsRendered = commentElements.length === highlights.length;
+    if (!allCommentsRendered) return;
+
+    // whenever the highlights array changes, we update
+  }, [highlights, containerRef]);
 
   useEffect(() => {
     if (_.keys(idToHeight).length !== highlights.length) return;
   }, [idToHeight]);
 
   return (
-    <Container>
+    <Container ref={(ref) => ref && setContainerRef(ref)}>
       {highlights.map((h) => (
         <div
           key={h.id}
-          ref={(ref) => {
-            console.log("setting");
-            if (!ref) {
-              delete idToElement.current[h.id];
-              setIdToHeight((old) => _.pickBy(old, (_, k) => k !== h.id));
-              return;
-            }
-            idToElement.current[h.id] = ref;
-            setIdToHeight((old) => ({
-              ...old,
-              [h.id]: ref.clientHeight,
-            }));
-          }}
+          //ref={(ref) => {
+          //  console.log("setting");
+          //  if (!ref) {
+          //    delete idToElement.current[h.id];
+          //    setIdToHeight((old) => _.pickBy(old, (_, k) => k !== h.id));
+          //    return;
+          //  }
+          //  idToElement.current[h.id] = ref;
+          //  setIdToHeight((old) => ({
+          //    ...old,
+          //    [h.id]: ref.clientHeight,
+          //  }));
+          //}}
           className={clsx(
             "absolute z-50 bg-black h-5 w-5",
-            !showComments && "hidden"
+            !showComments && "hidden",
+            COMMENT_CLASS
           )}
+          data-highlight-id={h.id}
           style={{ top: 100, left: rightMostCommentHandleOffset }}
         ></div>
       ))}
