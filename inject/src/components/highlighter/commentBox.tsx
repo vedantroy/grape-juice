@@ -1,27 +1,10 @@
 import { HighlightId } from "@site/db/types.server";
-import _, { xor } from "lodash-es";
-import React, {
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import _ from "lodash-es";
+import React, { useEffect, useMemo, useState } from "react";
 import { Container } from "./container";
-import { DeserializedPermanentHighlight } from "./sharedTypes";
+import { DeserializedPermanentHighlight, Rect } from "./sharedTypes";
 import Comment from "./comment";
 import invariant from "tiny-invariant";
-import { PermanentHighlight } from "./permanentHighlighter";
-
-type Rect = { left: number; top: number; width: number; height: number };
-const right = (r: Rect) => r.left + r.width;
-const bottom = (r: Rect) => r.top + r.height;
-const fromDOMRect = (r: DOMRect) => ({
-  left: r.left,
-  top: r.top,
-  width: r.width,
-  height: r.height,
-});
 
 type CommentBoxProps = {
   highlights: DeserializedPermanentHighlight[];
@@ -77,13 +60,14 @@ function sortByYAndTieBreakonX(xs: IdWithTopAndLeft[]) {
   });
 }
 
-function getActualYs({
+type IdToPosition = Record<HighlightId, { top: number }>;
+function getActualCommentYs({
   XYs: beforeCopy,
   idToHeight,
 }: {
   XYs: IdWithTopAndLeft[];
   idToHeight: IdToHeight;
-}): Record<HighlightId, number> {
+}): IdToPosition {
   const XYs = [...beforeCopy];
   sortByYAndTieBreakonX(XYs);
   const XYsWithHeight = XYs.map((x) => ({ ...x, height: idToHeight[x.id] }));
@@ -93,33 +77,31 @@ function getActualYs({
 
   const PADDING_BETWEEN_COMMENTS_PX = 20;
 
-  function shiftUp(by: number) {
+  function shiftUpCommentsIfNecessary() {
     for (let i = placements.length - 1; i > 0; --i) {
       const cur = placements[i];
-      const prev = i >= 0 ? placements[i - 1] : null;
-      cur.top -= by;
-      const noCommentAboveCur = prev === null;
-      if (noCommentAboveCur) return;
-      const minimumTop = bottom(prev) + PADDING_BETWEEN_COMMENTS_PX;
-      if (minimumTop > cur.top) {
-        const overshoot = minimumTop - cur.top;
-        by = overshoot;
+      const aboveCur = i >= 0 ? placements[i - 1] : null;
+      const shiftAboveCommentBy =
+        aboveCur === null
+          ? null
+          : bottom(aboveCur) + PADDING_BETWEEN_COMMENTS_PX - cur.top;
+
+      if (shiftAboveCommentBy !== null && shiftAboveCommentBy > 0) {
+        aboveCur!!.top -= shiftAboveCommentBy;
       } else break;
     }
   }
 
   for (let i = 1; i < XYsWithHeight.length; i++) {
-    const prev = XYsWithHeight[i - 1];
-    const cur = XYsWithHeight[i];
-
-    if (bottom(prev) + PADDING_BETWEEN_COMMENTS_PX < cur.top) {
-      placements.push(cur);
-    } else {
-      // call shiftup
-    }
+    placements.push(XYsWithHeight[i]);
+    shiftUpCommentsIfNecessary();
   }
 
-  return {};
+  const idToY: IdToPosition = {};
+  for (const p of placements) {
+    idToY[p.id] = { top: p.top };
+  }
+  return idToY;
 }
 
 export default function ({ highlights }: CommentBoxProps) {
@@ -139,35 +121,26 @@ export default function ({ highlights }: CommentBoxProps) {
     [highlights]
   );
 
-  const [showComments, setShowComments] = useState(false);
-
-  const idToElement = useRef<Record<HighlightId, HTMLElement>>({});
   const [idToHeight, setIdToHeight] = useState<IdToHeight>({});
-
-  // onChange => update comment heights
-  // usEffect => reflow
+  const [idToPos, setIdToPos] = useState<IdToPosition>({});
 
   useEffect(
     () => {
       if (_.keys(idToHeight).length !== highlights.length) return;
 
-      //const heights = highlights.map((h) => {
-      //  const height = idToHeight[h.id];
-      //  invariant(height !== undefined, `missing height for ${h.id}`);
-      //  return height;
-      //});
-
-      const actualYs = getActualYs({
+      const idToY = getActualCommentYs({
         XYs: highlightXYs,
         idToHeight,
       });
-
-      console.log(idToHeight);
+      setIdToPos(idToY);
     },
-    // Don't include `idealYs` b/c if new highlights are added,
-    // idToHeight will be changed anyways
+    // No need to include `highlights`, or any information that is calculated
+    // from `highlights` because any change in `highlights` will always result
+    // in `idToHeight` being changed *last*
     [idToHeight]
   );
+
+  const positionsCalculated = !_.isEmpty(idToPos);
 
   return (
     <Container>
@@ -177,61 +150,11 @@ export default function ({ highlights }: CommentBoxProps) {
             setIdToHeight((old) => ({ ...old, [h.id]: newHeight }))
           }
           key={h.id}
-          visible={showComments}
+          visible={positionsCalculated}
           x={rightMostCommentHandleOffset}
-          y={100}
+          y={idToPos[h.id]?.top}
         />
       ))}
     </Container>
   );
 }
-
-/*
-export default function ({ highlights }: PermanentHighlighterProps) {
-  const leftCoord = getLeftCoord(highlights);
-
-  function getIdealCoords(xs) {
-    return xs.map((x) => x.boundingRect().right);
-  }
-
-  const idealCoords = getIdealCoords(highlights);
-
-  const actualCoords = getActualCoords(highlights, activeHighlight);
-
-  function getActualCoords(xs) {
-    function shiftUp(xs, idx, amt) {
-      for (let i = xs.length; i > 0; i--) {
-        const cur = xs[i],
-          prev = xs[i - 1] || null;
-        xs.placement -= amt;
-        if (prev == null) return;
-        if (cur.start > prev.end) amt = cur.start - prev.end + PADDING;
-      }
-    }
-
-    let placements = [];
-    for (let i = 0; i < xs.length; i++) {
-      let prev = placements[i - 1];
-      if (prev.height + prev.placement > idealCoords[i]) {
-        shiftUp(placements, i, prev.height + prev.placement - idealCoords[i]);
-      }
-    }
-  }
-
-  return (
-    <div>
-      {highlights.map((h) => (
-        <div onClick={setActiveHighlight(id)}></div>
-      ))}
-    </div>
-  );
-
-  // coords of all elements -> max(X)
-  // sort by preferred Y
-  // for elem:
-  //  if preffered Y not occupied, place @ preffered Y
-  //  shift up previous elements, place @ preffered Y
-  //  shift(elems)
-  //
-}
-*/
