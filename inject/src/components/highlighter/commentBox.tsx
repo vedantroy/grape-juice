@@ -2,16 +2,16 @@ import { HighlightId } from "@site/db/types.server";
 import _ from "lodash-es";
 import React, { useEffect, useMemo, useState } from "react";
 import { Container } from "./container";
-import { DeserializedPermanentHighlight, Rect } from "./sharedTypes";
-import Comment from "./comment";
+import { DeserializedPermanentHighlight } from "./sharedTypes";
+import Comment, { COMMENT_BOX_WIDTH } from "./comment";
 import invariant from "tiny-invariant";
+import { Rect } from "src/utils/rect";
 
 type CommentBoxProps = {
   highlights: DeserializedPermanentHighlight[];
 };
 
 const COMMENT_BOX_OFFSET = 20;
-const COMMENT_BOX_WIDTH = 30;
 
 function getCommentHandleX(container: Element) {
   const { right, width } = container.getBoundingClientRect();
@@ -19,13 +19,6 @@ function getCommentHandleX(container: Element) {
     document.body.offsetWidth - COMMENT_BOX_WIDTH,
     right + width + COMMENT_BOX_OFFSET
   );
-}
-
-function getIdealY(rects: Rect[]): number {
-  const min = _.min(rects.map((r) => r.top));
-  // TODO: Don't use an invariant, just skip
-  invariant(min !== undefined, `no rects`);
-  return min;
 }
 
 function getHighlightTopAndLeft(rects: Rect[]): { left: number; top: number } {
@@ -75,9 +68,10 @@ function getActualCommentYs({
   const placements = [XYsWithHeight[0]];
   const bottom = (x: IdWithDimensions) => x.top + x.height;
 
-  const PADDING_BETWEEN_COMMENTS_PX = 20;
+  // h-10 in tailwindcss
+  const PADDING_BETWEEN_COMMENTS_PX = 40;
 
-  function shiftUpCommentsIfNecessary() {
+  function moveCommentBoxesUpIfNecessary() {
     for (let i = placements.length - 1; i > 0; --i) {
       const cur = placements[i];
       const aboveCur = i >= 0 ? placements[i - 1] : null;
@@ -94,7 +88,7 @@ function getActualCommentYs({
 
   for (let i = 1; i < XYsWithHeight.length; i++) {
     placements.push(XYsWithHeight[i]);
-    shiftUpCommentsIfNecessary();
+    moveCommentBoxesUpIfNecessary();
   }
 
   const idToY: IdToPosition = {};

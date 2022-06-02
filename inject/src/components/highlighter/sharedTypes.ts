@@ -5,5 +5,6 @@ export type DeserializedPermanentHighlight = {
   userId: UserId;
   container: Element;
   rects: Rect[];
+  area: number;
   id: HighlightId;
 };

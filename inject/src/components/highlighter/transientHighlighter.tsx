@@ -5,7 +5,8 @@ import { getColorFromUserId } from "src/utils/userId";
 import { Container } from "./container";
 import { Highlight } from "./highlight";
 import useWindowDimensions from "../hooks/useWIndowDimensions";
-import { makeRelativeToDocument } from "src/utils/rect";
+import { makeRelativeToDocument, Rect } from "src/utils/rect";
+import { getRectsFromRanges } from "./rect";
 
 export type TransientHighlighterProps = {
   highlights: Record<UserId, { ranges: Range[] }>;
@@ -16,23 +17,12 @@ export default function TransientHighlighter({
 }: TransientHighlighterProps) {
   useWindowDimensions();
 
-  //if (!_.isEmpty(highlights)) {
-  //  //@ts-ignore
-  //  window.highlights = highlights;
-  //  console.log("added to window");
-  //  debugger;
-  //}
-
-  const userIdToRects = _.toPairs(highlights).map<
-    [UserId, { rects: DOMRect[] }]
-  >(([userId, { ranges }]) => [
-    userId as UserId,
-    {
-      rects: ranges.flatMap((r) =>
-        Array.from(r.getClientRects()).map(makeRelativeToDocument)
-      ),
-    },
-  ]);
+  const userIdToRects = _.toPairs(highlights).map<[UserId, { rects: Rect[] }]>(
+    ([userId, { ranges }]) => [
+      userId as UserId,
+      { rects: getRectsFromRanges(ranges) },
+    ]
+  );
 
   return (
     <Container>

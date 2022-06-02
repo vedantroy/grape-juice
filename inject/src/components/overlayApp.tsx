@@ -21,7 +21,7 @@ import {
 } from "@site/websocket/protocol";
 
 // https://github.com/vitejs/vite/issues/3246
-import styles from "../index.css?inline";
+import twStyles from "./shadowDOM.css?inline";
 import { Rangee } from "rangee";
 import TransientHighlighter, {
   TransientHighlighterProps,
@@ -256,7 +256,7 @@ const App = () => {
   return (
     <div>
       <ReactShadowRoot>
-        <style type="text/css">{styles}</style>
+        <style type="text/css">{twStyles}</style>
         {/* <style id="toastify" type="text/css"> {toastStyles}</style> */}
         {selection ? (
           <HighlightButton

@@ -68,7 +68,7 @@ export function getSelectionUpdate(rangeSerializer: Rangee): null | Selection {
 
   const transformed = makeRelativeToDocument(lastRect);
   return {
-    x: transformed.right,
+    x: transformed.left + transformed.width,
     y: transformed.top,
     serializedRange: serialized,
     container: commonAncestorNotTextNode,
