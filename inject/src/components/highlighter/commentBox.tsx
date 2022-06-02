@@ -69,16 +69,15 @@ function getActualCommentYs({
   sortByYAndTieBreakonX(XYs);
   const XYsWithHeight = XYs.map((x) => ({ ...x, height: idToHeight[x.id] }));
 
-  const placements = [XYsWithHeight[0]];
   const bottom = (x: IdWithDimensions) => x.top + x.height;
 
   // h-10 in tailwindcss
   const PADDING_BETWEEN_COMMENTS_PX = 40;
 
-  function moveCommentBoxesUpIfNecessary() {
-    for (let i = placements.length - 1; i > 0; --i) {
-      const cur = placements[i];
-      const aboveCur = i >= 0 ? placements[i - 1] : null;
+  function moveCommentBoxesUpIfNecessary(curIdx: number) {
+    for (let i = curIdx; i > 0; --i) {
+      const cur = XYsWithHeight[i];
+      const aboveCur = i >= 0 ? XYsWithHeight[i - 1] : null;
       const shiftAboveCommentBy =
         aboveCur === null
           ? null
@@ -91,24 +90,23 @@ function getActualCommentYs({
   }
 
   for (let i = 1; i < XYsWithHeight.length; i++) {
-    placements.push(XYsWithHeight[i]);
-    moveCommentBoxesUpIfNecessary();
+    moveCommentBoxesUpIfNecessary(i);
   }
 
   if (activeHighlightId) {
-    const idx = placements.findIndex(({ id }) => id === activeHighlightId);
-    const activePlacement = placements[idx];
+    const idx = XYsWithHeight.findIndex(({ id }) => id === activeHighlightId);
+    const activePlacement = XYsWithHeight[idx];
     const idealPosition = idealXYs.find(({ id }) => id === activeHighlightId)!;
     const shiftBy = idealPosition.top - activePlacement.top;
 
     if (shiftBy !== 0) {
-      placements.forEach((p) => (p.top += shiftBy));
+      XYsWithHeight.forEach((p) => (p.top += shiftBy));
     }
   }
 
   const idToY: IdToPosition = {};
-  for (const p of placements) {
-    idToY[p.id] = { top: p.top };
+  for (const pos of XYsWithHeight) {
+    idToY[pos.id] = { top: pos.top };
   }
   return idToY;
 }
