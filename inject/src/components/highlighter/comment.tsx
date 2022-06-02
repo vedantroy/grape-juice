@@ -60,16 +60,16 @@ export default function ({
       ref={ref}
       id="comment-test"
       className={clsx(
-        "font-sans absolute shadow rounded z-50 bg-white flex flex-col items-stretch",
+        "font-sans absolute shadow hover:shadow-md rounded z-50 bg-white flex flex-col items-stretch",
         !visible && "invisible",
-        isActive && "scale-110"
+        isActive && "scale-110 shadow-lg"
       )}
       style={{
         top: y,
         left: x,
         width: COMMENT_BOX_WIDTH,
         padding: COMMENT_BOX_PADDING,
-        transitionProperty: "top, left, transform",
+        transitionProperty: "top, left, transform, box-shadow",
         // Tailwind CSS transition function
         transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
         transitionDuration: "300ms",
