@@ -166,12 +166,19 @@ export default function ({
         <Comment
           key={h.id}
           highlightId={h.id}
-          onClick={() => commentClicked(h.id)}
+          onClick={(e) => {
+            // Necessary because we don't want the document's
+            // onClick listener to be triggered because that will
+            // set the active highlight to null.
+            e.stopPropagation();
+            commentClicked(h.id);
+          }}
           userId={h.userId}
           onHeightChanged={(newHeight) =>
             setIdToHeight((old) => ({ ...old, [h.id]: newHeight }))
           }
           visible={positionsCalculated}
+          isActive={activeHighlightId === h.id}
           x={
             activeHighlightId === h.id
               ? rightMostCommentHandleOffset - ACTIVE_INDENT

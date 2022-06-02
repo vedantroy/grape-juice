@@ -129,7 +129,7 @@ export default function PermanentHighlighter({
       document.body.style.cursor = id === null ? "auto" : "pointer";
     }
 
-    function onMouseDown(e: MouseEvent) {
+    function onClick(e: MouseEvent) {
       const id = getIntersectingId(e);
       if (id !== activeHighlightId) {
         setActiveHighlightId(id);
@@ -138,11 +138,11 @@ export default function PermanentHighlighter({
 
     const throttled = _.throttle(onMouseMove, 10);
     document.addEventListener("mousemove", throttled);
-    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("click", onClick);
 
     return () => {
       document.removeEventListener("mousemove", throttled);
-      document.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("click", onClick);
     };
   }, [rectIdxToAreaAndId, flatbush, activeHighlightId]);
 

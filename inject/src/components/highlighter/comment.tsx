@@ -12,6 +12,7 @@ type CommentProps = {
   userId: UserId;
   onHeightChanged: (height: number) => void;
   onClick: React.MouseEventHandler;
+  isActive: boolean;
   // For debugging
   highlightId: HighlightId;
 };
@@ -44,6 +45,7 @@ export default function ({
   userId,
   onClick,
   highlightId,
+  isActive,
 }: CommentProps) {
   const { ref, height = DEFAULT_HEIGHT } = useResizeObserver<HTMLDivElement>();
 
@@ -59,14 +61,15 @@ export default function ({
       id="comment-test"
       className={clsx(
         "font-sans absolute shadow rounded z-50 bg-white flex flex-col items-stretch",
-        !visible && "invisible"
+        !visible && "invisible",
+        isActive && "scale-110"
       )}
       style={{
         top: y,
         left: x,
         width: COMMENT_BOX_WIDTH,
         padding: COMMENT_BOX_PADDING,
-        transitionProperty: "top, left",
+        transitionProperty: "top, left, transform",
         // Tailwind CSS transition function
         transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
         transitionDuration: "300ms",
