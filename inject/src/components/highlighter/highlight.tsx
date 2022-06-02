@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import React from "react";
-import { Rect } from "./sharedTypes";
+import { Rect } from "src/utils/rect";
 
 export type HighlightProps = {
   rects: Rect[];

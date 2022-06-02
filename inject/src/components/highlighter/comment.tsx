@@ -2,11 +2,14 @@ import clsx from "clsx";
 import React, { useEffect } from "react";
 import useResizeObserver from "use-resize-observer";
 import tw from "@site/components/tw-styled";
+import { getColorFromUserId } from "src/utils/userId";
+import { UserId } from "@site/db/types.server";
 
 type CommentProps = {
   x: number;
   y: number;
   visible: boolean;
+  userId: UserId;
   onHeightChanged: (height: number) => void;
 };
 
@@ -30,7 +33,13 @@ const ColorBadge = tw.div(`
     h-2
 `);
 
-export default function ({ x, y, visible, onHeightChanged }: CommentProps) {
+export default function ({
+  x,
+  y,
+  visible,
+  onHeightChanged,
+  userId,
+}: CommentProps) {
   const { ref, height = DEFAULT_HEIGHT } = useResizeObserver<HTMLDivElement>();
 
   useEffect(() => {
@@ -54,7 +63,9 @@ export default function ({ x, y, visible, onHeightChanged }: CommentProps) {
       }}
     >
       <HeaderRow>
-        <ColorBadge className="bg-yellow-400"></ColorBadge>
+        <ColorBadge
+          style={{ background: getColorFromUserId(userId) }}
+        ></ColorBadge>
         <div className="font-semibold text-base">Anon. Badger</div>
         <div className="ml-auto font-normal text-gray-400">9y ago</div>
       </HeaderRow>

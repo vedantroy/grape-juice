@@ -9,6 +9,7 @@ import { Rect } from "src/utils/rect";
 
 type CommentBoxProps = {
   highlights: DeserializedPermanentHighlight[];
+  setActiveHighlightIdRef: (f: (h: HighlightId) => void) => void;
 };
 
 const COMMENT_BOX_OFFSET = 20;
@@ -98,8 +99,18 @@ function getActualCommentYs({
   return idToY;
 }
 
-export default function ({ highlights }: CommentBoxProps) {
+export default function ({
+  highlights,
+  setActiveHighlightIdRef,
+}: CommentBoxProps) {
   invariant(highlights.length > 0, "no highlights");
+
+  const [activeHighlightId, setActiveHighlightId] =
+    useState<HighlightId | null>(null);
+
+  useEffect(() => {
+    setActiveHighlightIdRef(setActiveHighlightId);
+  }, []);
 
   const rightMostCommentHandleOffset = useMemo(
     () => _.max(highlights.map((h) => getCommentHandleX(h.container))),
@@ -140,6 +151,7 @@ export default function ({ highlights }: CommentBoxProps) {
     <Container>
       {highlights.map((h) => (
         <Comment
+          userId={h.userId}
           onHeightChanged={(newHeight) =>
             setIdToHeight((old) => ({ ...old, [h.id]: newHeight }))
           }

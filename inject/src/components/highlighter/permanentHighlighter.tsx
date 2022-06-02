@@ -1,5 +1,11 @@
 import * as _ from "lodash-es";
-import React, { Fragment, useCallback, useMemo, useState } from "react";
+import React, {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { Container } from "./container";
 import { Highlight } from "./highlight";
 import type { HighlightId, UserId } from "@site/db/types.server";
@@ -75,9 +81,14 @@ export default function PermanentHighlighter({
     );
 
     const flatbush = new Flatbush(allRects.length);
-    allRects.forEach((rect) =>
-      flatbush.add(rect.left, rect.top, rect.width, rect.height)
-    );
+    allRects.forEach((rect) => {
+      flatbush.add(
+        rect.left,
+        rect.top,
+        rect.left + rect.width,
+        rect.top + rect.height
+      );
+    });
     flatbush.finish();
 
     return [deserializedHighlights, rectIdxToAreaAndId, flatbush];
@@ -86,9 +97,9 @@ export default function PermanentHighlighter({
   const [activeHighlightId, setActiveHighlightId] =
     useState<HighlightId | null>(null);
 
-  const onMouseMove = useCallback(() => {
-    return _.throttle((e: MouseEvent) => {
-      if (_.isEmpty(highlights)) return;
+  const getIntersectingId = useCallback(
+    (e: MouseEvent): HighlightId | null => {
+      if (_.isEmpty(highlights)) return null;
 
       const { clientX: relativeToViewportX, clientY: relativeToViewportY } = e;
       const absX = relativeToViewportX + window.scrollX;
@@ -102,32 +113,51 @@ export default function PermanentHighlighter({
       intersectingRects.sort(
         (a, b) => a.totalHighlightArea - b.totalHighlightArea
       );
-      const smallestHighlightId = intersectingRects[0].id;
-      if (smallestHighlightId !== activeHighlightId) {
-        setActiveHighlightId(smallestHighlightId);
-      }
-    }, 10);
-  }, [rectIdxToAreaAndId, flatbush]);
 
-  console.log("highlight id");
-  console.log(activeHighlightId);
+      if (intersectingRects.length === 0) {
+        return null;
+      }
+      const smallestHighlightId = intersectingRects[0].id;
+      return smallestHighlightId;
+    },
+    [rectIdxToAreaAndId, flatbush, highlights]
+  );
+
+  useEffect(() => {
+    function onMouseMove(e: MouseEvent) {
+      const id = getIntersectingId(e);
+      document.body.style.cursor = id === null ? "auto" : "pointer";
+    }
+
+    function onMouseDown(e: MouseEvent) {
+      const id = getIntersectingId(e);
+      if (id !== activeHighlightId) {
+        setActiveHighlightId(id);
+      }
+    }
+
+    const throttled = _.throttle(onMouseMove, 10);
+    document.addEventListener("mousemove", throttled);
+    document.addEventListener("mousedown", onMouseDown);
+
+    return () => {
+      document.removeEventListener("mousemove", throttled);
+      document.removeEventListener("mousedown", onMouseDown);
+    };
+  }, [rectIdxToAreaAndId, flatbush, activeHighlightId]);
 
   if (_.isEmpty(highlights)) return null;
 
   return (
     <>
       <CommentBox highlights={deserializedHighlights} />
-      <Container
-        id="foo"
-        className="w-screen h-screen"
-        onMouseMove={onMouseMove}
-      >
+      <Container>
         {deserializedHighlights.map(({ rects, userId, id }) => (
           <Highlight
             key={id}
             color={getColorFromUserId(userId)}
             rects={rects}
-            opacity="high"
+            opacity={id === activeHighlightId ? "high" : "medium"}
           />
         ))}
       </Container>
