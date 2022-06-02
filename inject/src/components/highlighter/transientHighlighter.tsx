@@ -4,6 +4,7 @@ import React from "react";
 import { getColorFromUserId } from "src/utils/userId";
 import { Container } from "./container";
 import { Highlight } from "./highlight";
+import useWindowDimensions from "../hooks/useWIndowDimensions";
 
 export type TransientHighlighterProps = {
   highlights: Record<UserId, { ranges: Range[] }>;
@@ -12,6 +13,8 @@ export type TransientHighlighterProps = {
 export default function TransientHighlighter({
   highlights,
 }: TransientHighlighterProps) {
+  useWindowDimensions();
+
   const userIdToRects = _.toPairs(highlights).map<
     [UserId, { rects: DOMRect[] }]
   >(([userId, { ranges }]) => [

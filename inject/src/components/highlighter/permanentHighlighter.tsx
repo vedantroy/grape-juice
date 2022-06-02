@@ -7,6 +7,7 @@ import { getColorFromUserId } from "src/utils/userId";
 import invariant from "tiny-invariant";
 import { DeserializedPermanentHighlight } from "./sharedTypes";
 import CommentBox from "./commentBox";
+import useWindowDimensions from "../hooks/useWIndowDimensions";
 
 export type PermanentHighlight = {
   ranges: Range[];
@@ -30,6 +31,8 @@ export default function PermanentHighlighter({
   highlights,
 }: PermanentHighlighterProps) {
   if (_.isEmpty(highlights)) return null;
+
+  useWindowDimensions();
 
   const deserializedHighlights: DeserializedPermanentHighlight[] = _.toPairs(
     highlights
