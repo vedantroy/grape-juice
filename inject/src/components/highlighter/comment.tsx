@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 import useResizeObserver from "use-resize-observer";
 import tw from "@site/components/tw-styled";
 import { getColorFromUserId } from "src/utils/userId";
-import { UserId } from "@site/db/types.server";
+import { HighlightId, UserId } from "@site/db/types.server";
 
 type CommentProps = {
   x: number;
@@ -12,6 +12,8 @@ type CommentProps = {
   userId: UserId;
   onHeightChanged: (height: number) => void;
   onClick: React.MouseEventHandler;
+  // For debugging
+  highlightId: HighlightId;
 };
 
 const DEFAULT_HEIGHT = -1;
@@ -41,6 +43,7 @@ export default function ({
   onHeightChanged,
   userId,
   onClick,
+  highlightId,
 }: CommentProps) {
   const { ref, height = DEFAULT_HEIGHT } = useResizeObserver<HTMLDivElement>();
 
@@ -63,6 +66,10 @@ export default function ({
         left: x,
         width: COMMENT_BOX_WIDTH,
         padding: COMMENT_BOX_PADDING,
+        transitionProperty: "top, left",
+        // Tailwind CSS transition function
+        transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+        transitionDuration: "300ms",
       }}
     >
       <HeaderRow>
@@ -80,9 +87,7 @@ export default function ({
         }}
         className="bg-gray-300"
       ></div>
-      <div className="mt-2 px-4">
-        lorem ipsum dolor lorem ipsum dolor lorem ipsum dolor
-      </div>
+      <div className="mt-2 px-4">{highlightId}</div>
       <div className="text-right text-gray-400 text-sm">REPLY</div>
     </div>
   );

@@ -57,15 +57,15 @@ function sortByYAndTieBreakonX(xs: IdWithTopAndLeft[]) {
 
 type IdToPosition = Record<HighlightId, { top: number }>;
 function getActualCommentYs({
-  XYs: idealXYs,
+  idealXYs,
   idToHeight,
   activeHighlightId,
 }: {
-  XYs: IdWithTopAndLeft[];
+  idealXYs: IdWithTopAndLeft[];
   idToHeight: IdToHeight;
   activeHighlightId: HighlightId | null;
 }): IdToPosition {
-  const XYs = [...idealXYs];
+  const XYs = _.cloneDeep(idealXYs);
   sortByYAndTieBreakonX(XYs);
   const XYsWithHeight = XYs.map((x) => ({ ...x, height: idToHeight[x.id] }));
 
@@ -98,7 +98,8 @@ function getActualCommentYs({
   if (activeHighlightId) {
     const idx = placements.findIndex(({ id }) => id === activeHighlightId);
     const activePlacement = placements[idx];
-    const shiftBy = idealXYs[idx].top - activePlacement.top;
+    const idealPosition = idealXYs.find(({ id }) => id === activeHighlightId)!;
+    const shiftBy = idealPosition.top - activePlacement.top;
 
     if (shiftBy !== 0) {
       placements.forEach((p) => (p.top += shiftBy));
@@ -145,7 +146,7 @@ export default function ({
       if (_.keys(idToHeight).length !== highlights.length) return;
 
       const idToY = getActualCommentYs({
-        XYs: highlightXYs,
+        idealXYs: highlightXYs,
         idToHeight,
         activeHighlightId,
       });
@@ -163,12 +164,13 @@ export default function ({
     <Container>
       {highlights.map((h) => (
         <Comment
+          key={h.id}
+          highlightId={h.id}
           onClick={() => commentClicked(h.id)}
           userId={h.userId}
           onHeightChanged={(newHeight) =>
             setIdToHeight((old) => ({ ...old, [h.id]: newHeight }))
           }
-          key={h.id}
           visible={positionsCalculated}
           x={
             activeHighlightId === h.id
