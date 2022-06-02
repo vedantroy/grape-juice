@@ -1,4 +1,5 @@
 import type { Rangee } from "rangee";
+import { makeRelativeToDocument } from "./rect";
 
 export function getNonEmptyRangeWithText(): {
   range: Range;
@@ -61,12 +62,14 @@ export function getSelectionUpdate(rangeSerializer: Rangee): null | Selection {
     // TODO: These checks might be disallowing valid ranges
     !commonAncestorNotTextNode ||
     !(commonAncestorNotTextNode instanceof HTMLElement)
-  )
+  ) {
     return null;
+  }
 
+  const transformed = makeRelativeToDocument(lastRect);
   return {
-    x: lastRect.right,
-    y: lastRect.top,
+    x: transformed.right,
+    y: transformed.top,
     serializedRange: serialized,
     container: commonAncestorNotTextNode,
   };

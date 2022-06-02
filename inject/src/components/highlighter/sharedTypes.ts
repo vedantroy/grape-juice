@@ -1,11 +1,5 @@
 import { HighlightId, UserId } from "@site/db/types.server";
-
-export type Rect = {
-  top: number;
-  left: number;
-  width: number;
-  height: number;
-};
+import { Rect } from "src/utils/rect";
 
 export type DeserializedPermanentHighlight = {
   userId: UserId;
