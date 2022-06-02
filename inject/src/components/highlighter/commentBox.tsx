@@ -9,7 +9,8 @@ import { Rect } from "src/utils/rect";
 
 type CommentBoxProps = {
   highlights: DeserializedPermanentHighlight[];
-  setActiveHighlightIdRef: (f: (h: HighlightId) => void) => void;
+  activeHighlightId: HighlightId | null;
+  commentClicked: (highlightId: HighlightId) => void;
 };
 
 const COMMENT_BOX_OFFSET = 20;
@@ -56,13 +57,15 @@ function sortByYAndTieBreakonX(xs: IdWithTopAndLeft[]) {
 
 type IdToPosition = Record<HighlightId, { top: number }>;
 function getActualCommentYs({
-  XYs: beforeCopy,
+  XYs: idealXYs,
   idToHeight,
+  activeHighlightId,
 }: {
   XYs: IdWithTopAndLeft[];
   idToHeight: IdToHeight;
+  activeHighlightId: HighlightId | null;
 }): IdToPosition {
-  const XYs = [...beforeCopy];
+  const XYs = [...idealXYs];
   sortByYAndTieBreakonX(XYs);
   const XYsWithHeight = XYs.map((x) => ({ ...x, height: idToHeight[x.id] }));
 
@@ -92,6 +95,16 @@ function getActualCommentYs({
     moveCommentBoxesUpIfNecessary();
   }
 
+  if (activeHighlightId) {
+    const idx = placements.findIndex(({ id }) => id === activeHighlightId);
+    const activePlacement = placements[idx];
+    const shiftBy = idealXYs[idx].top - activePlacement.top;
+
+    if (shiftBy !== 0) {
+      placements.forEach((p) => (p.top += shiftBy));
+    }
+  }
+
   const idToY: IdToPosition = {};
   for (const p of placements) {
     idToY[p.id] = { top: p.top };
@@ -99,18 +112,14 @@ function getActualCommentYs({
   return idToY;
 }
 
+const ACTIVE_INDENT = 40;
+
 export default function ({
   highlights,
-  setActiveHighlightIdRef,
+  commentClicked,
+  activeHighlightId,
 }: CommentBoxProps) {
   invariant(highlights.length > 0, "no highlights");
-
-  const [activeHighlightId, setActiveHighlightId] =
-    useState<HighlightId | null>(null);
-
-  useEffect(() => {
-    setActiveHighlightIdRef(setActiveHighlightId);
-  }, []);
 
   const rightMostCommentHandleOffset = useMemo(
     () => _.max(highlights.map((h) => getCommentHandleX(h.container))),
@@ -129,6 +138,8 @@ export default function ({
   const [idToHeight, setIdToHeight] = useState<IdToHeight>({});
   const [idToPos, setIdToPos] = useState<IdToPosition>({});
 
+  // TODO: Convert to `useMemo`
+  // also remember useMemo can have stale values
   useEffect(
     () => {
       if (_.keys(idToHeight).length !== highlights.length) return;
@@ -136,13 +147,14 @@ export default function ({
       const idToY = getActualCommentYs({
         XYs: highlightXYs,
         idToHeight,
+        activeHighlightId,
       });
       setIdToPos(idToY);
     },
     // No need to include `highlights`, or any information that is calculated
     // from `highlights` because any change in `highlights` will always result
     // in `idToHeight` being changed *last*
-    [idToHeight]
+    [idToHeight, activeHighlightId]
   );
 
   const positionsCalculated = !_.isEmpty(idToPos);
@@ -151,13 +163,18 @@ export default function ({
     <Container>
       {highlights.map((h) => (
         <Comment
+          onClick={() => commentClicked(h.id)}
           userId={h.userId}
           onHeightChanged={(newHeight) =>
             setIdToHeight((old) => ({ ...old, [h.id]: newHeight }))
           }
           key={h.id}
           visible={positionsCalculated}
-          x={rightMostCommentHandleOffset}
+          x={
+            activeHighlightId === h.id
+              ? rightMostCommentHandleOffset - ACTIVE_INDENT
+              : rightMostCommentHandleOffset
+          }
           y={idToPos[h.id]?.top}
         />
       ))}

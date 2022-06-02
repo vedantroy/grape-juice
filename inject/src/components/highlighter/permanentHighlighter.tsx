@@ -150,7 +150,11 @@ export default function PermanentHighlighter({
 
   return (
     <>
-      <CommentBox highlights={deserializedHighlights} />
+      <CommentBox
+        activeHighlightId={activeHighlightId}
+        commentClicked={(id) => setActiveHighlightId(id)}
+        highlights={deserializedHighlights}
+      />
       <Container>
         {deserializedHighlights.map(({ rects, userId, id }) => (
           <Highlight

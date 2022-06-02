@@ -11,6 +11,7 @@ type CommentProps = {
   visible: boolean;
   userId: UserId;
   onHeightChanged: (height: number) => void;
+  onClick: React.MouseEventHandler;
 };
 
 const DEFAULT_HEIGHT = -1;
@@ -39,6 +40,7 @@ export default function ({
   visible,
   onHeightChanged,
   userId,
+  onClick,
 }: CommentProps) {
   const { ref, height = DEFAULT_HEIGHT } = useResizeObserver<HTMLDivElement>();
 
@@ -49,6 +51,7 @@ export default function ({
 
   return (
     <div
+      onClick={onClick}
       ref={ref}
       id="comment-test"
       className={clsx(
