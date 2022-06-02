@@ -15,11 +15,18 @@ export default function TransientHighlighter({
 }: TransientHighlighterProps) {
   useWindowDimensions();
 
+  //if (!_.isEmpty(highlights)) {
+  //  //@ts-ignore
+  //  window.highlights = highlights;
+  //  console.log("added to window");
+  //  debugger;
+  //}
+
   const userIdToRects = _.toPairs(highlights).map<
     [UserId, { rects: DOMRect[] }]
   >(([userId, { ranges }]) => [
     userId as UserId,
-    { rects: ranges.map((r) => r.getBoundingClientRect()) },
+    { rects: ranges.flatMap((r) => Array.from(r.getClientRects())) },
   ]);
 
   return (
