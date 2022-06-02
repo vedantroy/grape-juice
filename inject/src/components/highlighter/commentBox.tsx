@@ -9,8 +9,8 @@ import { Rect } from "src/utils/rect";
 
 type CommentBoxProps = {
   highlights: DeserializedPermanentHighlight[];
-  activeHighlightId: HighlightId | null;
   commentClicked: (highlightId: HighlightId) => void;
+  activeHighlightId: HighlightId | null;
 };
 
 const COMMENT_BOX_OFFSET = 20;
@@ -143,12 +143,15 @@ export default function ({
     () => {
       if (_.keys(idToHeight).length !== highlights.length) return;
 
-      const idToY = getActualCommentYs({
-        idealXYs: highlightXYs,
-        idToHeight,
-        activeHighlightId,
-      });
-      setIdToPos(idToY);
+      const positionsNotInitialized = _.isEmpty(idToPos);
+      if (positionsNotInitialized || activeHighlightId) {
+        const idToY = getActualCommentYs({
+          idealXYs: highlightXYs,
+          idToHeight,
+          activeHighlightId,
+        });
+        setIdToPos(idToY);
+      }
     },
     // No need to include `highlights`, or any information that is calculated
     // from `highlights` because any change in `highlights` will always result

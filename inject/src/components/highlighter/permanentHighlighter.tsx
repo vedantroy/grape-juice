@@ -131,9 +131,7 @@ export default function PermanentHighlighter({
 
     function onClick(e: MouseEvent) {
       const id = getIntersectingId(e);
-      if (id !== activeHighlightId) {
-        setActiveHighlightId(id);
-      }
+      setActiveHighlightId(id);
     }
 
     const throttled = _.throttle(onMouseMove, 10);
