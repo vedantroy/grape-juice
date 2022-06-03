@@ -29,8 +29,10 @@ export type Highlight = {
   containerSelector: string;
 };
 
+export type ReplyId = Brand<string, "ReplyId">;
 export type Reply = {
   userId: UserId;
+  id: ReplyId;
   date: Date;
   text: string;
 };

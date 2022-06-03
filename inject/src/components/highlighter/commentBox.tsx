@@ -1,4 +1,4 @@
-import { HighlightId } from "@site/db/types.server";
+import { HighlightId, ReplyId, UserId } from "@site/db/types.server";
 import _ from "lodash-es";
 import React, { useEffect, useMemo, useState } from "react";
 import { Container } from "./container";
@@ -9,7 +9,7 @@ import { Rect } from "src/utils/rect";
 
 type CommentBoxProps = {
   highlights: DeserializedPermanentHighlight[];
-  commentClicked: (highlightId: HighlightId) => void;
+  commentClicked: (highlightId: HighlightId | null) => void;
   activeHighlightId: HighlightId | null;
 };
 
@@ -165,15 +165,23 @@ export default function ({
     <Container>
       {highlights.map((h) => (
         <Comment
+          replies={[
+            {
+              id: "foobar" as ReplyId,
+              userId: "foo" as UserId,
+              text: "aasd",
+              date: new Date(),
+            },
+            {
+              id: "foobarbaz" as ReplyId,
+              userId: "foo" as UserId,
+              text: "aasd",
+              date: new Date(),
+            },
+          ]}
           key={h.id}
           highlightId={h.id}
-          onClick={(e) => {
-            // Necessary because we don't want the document's
-            // onClick listener to be triggered because that will
-            // set the active highlight to null.
-            e.stopPropagation();
-            commentClicked(h.id);
-          }}
+          onClick={commentClicked}
           userId={h.userId}
           onHeightChanged={(newHeight) =>
             setIdToHeight((old) => ({ ...old, [h.id]: newHeight }))

@@ -148,16 +148,23 @@ const elementsArray: (keyof JSX.IntrinsicElements)[] = [
 type TagName = keyof JSX.IntrinsicElements;
 type Wrapper<T extends TagName> = JSX.IntrinsicElements[T] & {
   children?: React.ReactChildren | React.ReactNode;
+  innerRef?: React.Ref<any>;
 };
 
 function createElementWithClasses<T extends TagName>(
   tag: T,
   className: string
 ) {
-  return ({ children, className: propsClassName, ...props }: Wrapper<T>) => {
+  return ({
+    children,
+    className: propsClassName,
+    innerRef,
+    ...props
+  }: Wrapper<T>) => {
     return React.createElement(tag, {
       children,
       ...props,
+      ref: innerRef,
       className: clsx(className, propsClassName),
     });
   };

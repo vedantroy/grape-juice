@@ -1,11 +1,5 @@
 import * as _ from "lodash-es";
-import React, {
-  Fragment,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Container } from "./container";
 import { Highlight } from "./highlight";
 import type { HighlightId, UserId } from "@site/db/types.server";
@@ -22,6 +16,58 @@ export type PermanentHighlight = {
   ranges: Range[];
   userId: UserId;
   containerSelector: string;
+  // replies => rendered straight in
+  // submit a reply over the websocket (w/ a nonce)
+  // we do not wipe our state unless
+
+  // REST API + Websockets
+  // - Get the new comment data from websockets
+  // - Refresh comments
+  // On submit, do POST -- set to loading state
+  // wipe submission once submit finishes (post API returns comment data as well)
+
+  // Websockets only
+  // - Get new comment data from websockets
+  // Refresh comment
+  // On submit, send CreateReply to Websocket with highlightid
+  // WebSocket will send back the new comment data
+  // WebSocket will send back a ReplyConfirmed, which will wipe the loading state
+
+  // Rest API can be done *inside* of the comments component
+  // Each component maintains its own REST API lifecycle
+  // With Websockets, once we have a reply confirmed, now what?
+  // - we set loading state to faflse
+  // - useEffect on loading state wipes the comment box
+  //
+
+  /*
+
+  const submit = useCb(text => if(!loading) loading=true && post(...))
+
+  onSubmit: text => { 
+            loading = true
+            post(text)
+              .then(loading = false && clearSubmission())
+  }
+
+  */
+
+  /* websocket version
+
+  onSubmit: text => {
+         loading = true
+         postToSocket(text)
+         
+  }
+
+  */
+
+  // When do we wipe the submission box?
+  //  - When the user clicks the submit button (loading spinner)
+  //  - When do we get rid of the loading spinner?
+  //    When the POST request returns with new data
+  // - Otherwise, new data is rendered but we keep the submission (if it exists)
+  //
 };
 
 export type PermanentHighlighterProps = {
