@@ -164,8 +164,6 @@ const App = () => {
   const handleSubscribed = useCallback(
     (msg: SubscribedMessage) => {
       const { highlights: newestHighlights } = msg;
-      console.log("NEWEST ...");
-      console.log(newestHighlights);
       const deserialized: PermanentHighlighterProps["highlights"] = _.mapValues(
         newestHighlights,
         ({ range, ...rest }) => ({
@@ -189,10 +187,6 @@ const App = () => {
 
       const bytes = new Uint8Array(await lastMessage!!.data.arrayBuffer());
       const unvalidated = unpack(bytes);
-
-      console.log("UNVALIDATED");
-      console.log(unvalidated);
-
       const msg = Message.parse(unvalidated);
 
       const sentDirectlyToUs = !(msg as any).userId;
