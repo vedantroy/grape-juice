@@ -2,6 +2,7 @@ import short from "short-uuid";
 import { ImmortalStorage, LocalStorageStore, ImmortalDB } from "immortal-db";
 import type { UserId } from "@site/db/types.server";
 import colors from "src/generated/colors";
+import animalNames from "src/generated/animalNames";
 
 const DEBUG = true;
 
@@ -38,4 +39,9 @@ const cyrb53 = function (str: string, seed = 0) {
 export function getColorFromUserId(userId: UserId) {
   const hash = cyrb53(userId);
   return colors[hash % colors.length];
+}
+
+export function getAnimalNameFromUserId(userId: UserId) {
+  const hash = cyrb53(userId);
+  return animalNames[hash % animalNames.length];
 }

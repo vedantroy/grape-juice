@@ -2,7 +2,7 @@ import clsx from "clsx";
 import React, { Fragment, useEffect, useRef, useState } from "react";
 import useResizeObserver from "use-resize-observer";
 import tw from "@site/components/tw-styled";
-import { getColorFromUserId } from "src/utils/userId";
+import { getAnimalNameFromUserId, getColorFromUserId } from "src/utils/userId";
 import { HighlightId, PageId, Reply, UserId } from "@site/db/types.server";
 import TextAreaAutosize from "react-textarea-autosize";
 import { formatDistanceToNowStrict } from "date-fns";
@@ -28,11 +28,7 @@ type CommentProps = {
 };
 
 const DEFAULT_HEIGHT = -1;
-// w-60 in tailwind
 export const COMMENT_BOX_WIDTH = 280;
-//export const COMMENT_BOX_WIDTH = 240;
-// p-2 in tailwind
-const COMMENT_BOX_PADDING = 8;
 
 const HeaderRow = tw.div(`
     flex
@@ -200,8 +196,10 @@ export default function ({
       {replies.map((r, idx) => (
         <Fragment key={r.id}>
           <HeaderRow>
-            <ColorBadge style={{ background: getColorFromUserId(userId) }} />
-            <div className="font-semibold text-base">Anon. Badger</div>
+            <ColorBadge style={{ background: getColorFromUserId(r.userId) }} />
+            <div className="font-semibold text-base capitalize">
+              Anon. {getAnimalNameFromUserId(r.userId)}
+            </div>
             <div className="font-normal text-gray-400 whitespace-nowrap">
               ·{" "}
               {formatDistanceToNowStrict(r.date, {
