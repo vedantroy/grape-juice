@@ -5,6 +5,7 @@ import tw from "@site/components/tw-styled";
 import { getColorFromUserId } from "src/utils/userId";
 import { HighlightId, Reply, UserId } from "@site/db/types.server";
 import TextAreaAutosize from "react-textarea-autosize";
+import { formatDistanceToNowStrict } from "date-fns";
 
 type CommentProps = {
   x: number;
@@ -140,7 +141,14 @@ export default function ({
           <HeaderRow>
             <ColorBadge style={{ background: getColorFromUserId(userId) }} />
             <div className="font-semibold text-base">Anon. Badger</div>
-            <div className="font-normal text-gray-400"> · 9y ago</div>
+            <div className="font-normal text-gray-400 whitespace-nowrap">
+              ·{" "}
+              {formatDistanceToNowStrict(r.date, {
+                addSuffix: true,
+              })
+                .replace("minutes", "mins")
+                .replace("seconds", "secs")}
+            </div>
           </HeaderRow>
           <p className="mt-2 px-4 pb-4 break-words">{r.text}</p>
           {idx < replies.length - 1 ? (
