@@ -99,3 +99,14 @@ export const Message = zod.union([
   HighlightCreatedMessage,
 ]);
 export type Message = zod.infer<typeof Message>;
+
+// Used for REST API only
+export const ReplyCreatedPayload = zod.object({
+  reply: zod.object({
+    userId: zod.string().uuid(),
+    text: z.string(),
+  }),
+  postId: z.string(),
+  highlightId: z.string(),
+});
+export type ReplyCreatedPayload = zod.infer<typeof ReplyCreatedPayload>;

@@ -36,7 +36,7 @@ import _ from "lodash-es";
 import PermanentHighlighter, {
   PermanentHighlighterProps,
 } from "./highlighter/permanentHighlighter";
-import { HighlightId, ReplyId, UserId } from "@site/db/types.server";
+import { HighlightId, PageId, ReplyId, UserId } from "@site/db/types.server";
 import CursorChat from "src/vendor/cursor-chat";
 import { HighlightWithActiveRanges } from "./highlighter/sharedTypes";
 
@@ -290,7 +290,10 @@ const App = () => {
             onClick={submitSelection}
           />
         ) : null}
-        <PermanentHighlighter highlights={permanentHighlights} />
+        <PermanentHighlighter
+          postId={CHANNEL as PageId}
+          highlights={permanentHighlights}
+        />
         <TransientHighlighter highlights={transientHighlights} />
         <ToastContainer pauseOnFocusLoss={false} pauseOnHover={false} />
       </ReactShadowRoot>

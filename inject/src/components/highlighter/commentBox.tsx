@@ -1,4 +1,4 @@
-import { HighlightId, ReplyId, UserId } from "@site/db/types.server";
+import { HighlightId, PageId, ReplyId, UserId } from "@site/db/types.server";
 import _ from "lodash-es";
 import React, { useEffect, useMemo, useState } from "react";
 import { Container } from "./container";
@@ -11,6 +11,7 @@ type CommentBoxProps = {
   highlights: InstantiatedHighlight[];
   commentClicked: (highlightId: HighlightId | null) => void;
   activeHighlightId: HighlightId | null;
+  postId: PageId;
 };
 
 const COMMENT_BOX_OFFSET = 20;
@@ -117,6 +118,7 @@ export default function ({
   highlights,
   commentClicked,
   activeHighlightId,
+  postId,
 }: CommentBoxProps) {
   invariant(highlights.length > 0, "no highlights");
 
@@ -183,9 +185,10 @@ export default function ({
     <Container>
       {highlights.map((h) => (
         <Comment
-          replies={h.replies}
           key={h.id}
+          replies={h.replies}
           highlightId={h.id}
+          postId={postId}
           onHighlightId={commentClicked}
           onHideReplyBox={() => setReplyBoxHiddenHighlightId(h.id)}
           userId={h.userId}
