@@ -140,8 +140,6 @@ export default function ({
   const [replyBoxHiddenHighlightId, setReplyBoxHiddenHighlightId] =
     useState<HighlightId | null>(null);
 
-  // TODO: Convert to `useMemo`
-  // also remember useMemo can have stale values
   useEffect(
     () => {
       if (_.keys(idToHeight).length !== highlights.length) return;
@@ -154,24 +152,30 @@ export default function ({
           activeHighlightId,
         });
         setIdToPos(idToY);
+      } else if (!positionsNotInitialized) {
+        // PURPOSE: Without this, when we hide the reply box on a comment by
+        // clicking "cancel" or clicking outside of the comment box (& the reply box
+        // is empty) there is an unnatural gap between the comment box and the the one
+        // below it.
+
+        // WHY: We avoid recalculating positions in that scenario in order to
+        // merely defocus the current highlight instead of resetting all comment
+        // box positions. But, the previous positions included the comment box *with*
+        // reply box attached.
+
+        const idToY = getActualCommentYs({
+          idealXYs: highlightXYs,
+          idToHeight,
+          activeHighlightId: replyBoxHiddenHighlightId,
+        });
+        setIdToPos(idToY);
       }
     },
     // No need to include `highlights`, or any information that is calculated
     // from `highlights` because any change in `highlights` will always result
     // in `idToHeight` being changed *last*
-    [idToHeight, activeHighlightId]
+    [idToHeight, activeHighlightId, replyBoxHiddenHighlightId]
   );
-
-  useEffect(() => {
-    if (replyBoxHiddenHighlightId && !activeHighlightId) {
-      const idToY = getActualCommentYs({
-        idealXYs: highlightXYs,
-        idToHeight,
-        activeHighlightId: replyBoxHiddenHighlightId,
-      });
-      setIdToPos(idToY);
-    }
-  }, [replyBoxHiddenHighlightId, idToHeight]);
 
   const positionsCalculated = !_.isEmpty(idToPos);
 
