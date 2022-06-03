@@ -137,6 +137,9 @@ export default function ({
   const [idToHeight, setIdToHeight] = useState<IdToHeight>({});
   const [idToPos, setIdToPos] = useState<IdToPosition>({});
 
+  const [replyBoxHiddenHighlightId, setReplyBoxHiddenHighlightId] =
+    useState<HighlightId | null>(null);
+
   // TODO: Convert to `useMemo`
   // also remember useMemo can have stale values
   useEffect(
@@ -158,6 +161,17 @@ export default function ({
     // in `idToHeight` being changed *last*
     [idToHeight, activeHighlightId]
   );
+
+  useEffect(() => {
+    if (replyBoxHiddenHighlightId && !activeHighlightId) {
+      const idToY = getActualCommentYs({
+        idealXYs: highlightXYs,
+        idToHeight,
+        activeHighlightId: replyBoxHiddenHighlightId,
+      });
+      setIdToPos(idToY);
+    }
+  }, [replyBoxHiddenHighlightId, idToHeight]);
 
   const positionsCalculated = !_.isEmpty(idToPos);
 
@@ -181,7 +195,8 @@ export default function ({
           ]}
           key={h.id}
           highlightId={h.id}
-          onClick={commentClicked}
+          onHighlightId={commentClicked}
+          onHideReplyBox={() => setReplyBoxHiddenHighlightId(h.id)}
           userId={h.userId}
           onHeightChanged={(newHeight) =>
             setIdToHeight((old) => ({ ...old, [h.id]: newHeight }))

@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useEffect, useRef, useState } from "react";
 import useResizeObserver from "use-resize-observer";
 import tw from "@site/components/tw-styled";
 import { getColorFromUserId } from "src/utils/userId";
@@ -12,7 +12,8 @@ type CommentProps = {
   visible: boolean;
   userId: UserId;
   onHeightChanged: (height: number) => void;
-  onClick: (h: HighlightId | null) => void;
+  onHighlightId: (h: HighlightId | null) => void;
+  onHideReplyBox: () => void;
   isActive: boolean;
   // For debugging
   highlightId: HighlightId;
@@ -75,10 +76,11 @@ export default function ({
   visible,
   onHeightChanged,
   userId,
-  onClick,
+  onHighlightId,
   highlightId,
   isActive,
   replies,
+  onHideReplyBox,
 }: CommentProps) {
   const { ref, height = DEFAULT_HEIGHT } = useResizeObserver<HTMLDivElement>();
 
@@ -88,8 +90,15 @@ export default function ({
   }, [height]);
 
   const [text, setText] = useState("");
-
   const showReplyBox = text !== "" || isActive;
+
+  const mountRef = useRef(false);
+  useEffect(() => {
+    if (mountRef.current && !showReplyBox) {
+      onHideReplyBox();
+    }
+    mountRef.current = true;
+  }, [showReplyBox]);
 
   return (
     <Comment
@@ -104,11 +113,11 @@ export default function ({
         const buttonType = e.target.getAttribute("data-button-type");
         if (buttonType === CANCEL_BUTTON_TYPE) {
           setText("");
-          onClick(null);
+          onHighlightId(null);
         } else if (buttonType === SUBMIT_BUTTON_TYPE) {
           console.log("submi!");
         } else {
-          onClick(highlightId);
+          onHighlightId(highlightId);
         }
       }}
       innerRef={ref}
