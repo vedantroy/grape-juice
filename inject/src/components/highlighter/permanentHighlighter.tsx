@@ -39,8 +39,6 @@ export default function PermanentHighlighter({
 }: PermanentHighlighterProps) {
   const { width, height } = useWindowDimensions();
 
-  console.log(highlights);
-
   const [deserializedHighlights, rectIdxToAreaAndId, flatbush]: [
     InstantiatedHighlight[],
     RectIdxToHighlightAreaAndId,

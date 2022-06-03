@@ -68,7 +68,11 @@ type HighlightStatus = typeof HighlightStatus[keyof typeof HighlightStatus];
 const App = () => {
   const { sendMessage, lastMessage, readyState } = useWebSocket(
     `ws://localhost:9001/${CHANNEL}`,
-    {}
+    {
+      onOpen() {
+        console.log("websocket opened");
+      },
+    }
   );
 
   const [highlightStatus, setHighlightStatus] = useState<HighlightStatus>(
@@ -160,6 +164,8 @@ const App = () => {
   const handleSubscribed = useCallback(
     (msg: SubscribedMessage) => {
       const { highlights: newestHighlights } = msg;
+      console.log("NEWEST ...");
+      console.log(newestHighlights);
       const deserialized: PermanentHighlighterProps["highlights"] = _.mapValues(
         newestHighlights,
         ({ range, ...rest }) => ({
