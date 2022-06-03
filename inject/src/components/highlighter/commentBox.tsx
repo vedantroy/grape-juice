@@ -2,13 +2,13 @@ import { HighlightId, ReplyId, UserId } from "@site/db/types.server";
 import _ from "lodash-es";
 import React, { useEffect, useMemo, useState } from "react";
 import { Container } from "./container";
-import { DeserializedPermanentHighlight } from "./sharedTypes";
+import { InstantiatedHighlight } from "./sharedTypes";
 import Comment, { COMMENT_BOX_WIDTH } from "./comment";
 import invariant from "tiny-invariant";
 import { Rect } from "src/utils/rect";
 
 type CommentBoxProps = {
-  highlights: DeserializedPermanentHighlight[];
+  highlights: InstantiatedHighlight[];
   commentClicked: (highlightId: HighlightId | null) => void;
   activeHighlightId: HighlightId | null;
 };
@@ -153,7 +153,7 @@ export default function ({
         });
         setIdToPos(idToY);
       } else if (!positionsNotInitialized) {
-        // PURPOSE: Without this, when we hide the reply box on a comment by
+        // PROBLEM SOLVED: Without this, when we hide the reply box on a comment by
         // clicking "cancel" or clicking outside of the comment box (& the reply box
         // is empty) there is an unnatural gap between the comment box and the the one
         // below it.
@@ -183,20 +183,7 @@ export default function ({
     <Container>
       {highlights.map((h) => (
         <Comment
-          replies={[
-            {
-              id: "foobar" as ReplyId,
-              userId: "foo" as UserId,
-              text: "aasd",
-              date: new Date(),
-            },
-            {
-              id: "foobarbaz" as ReplyId,
-              userId: "foo" as UserId,
-              text: "aasd",
-              date: new Date(),
-            },
-          ]}
+          replies={h.replies}
           key={h.id}
           highlightId={h.id}
           onHighlightId={commentClicked}

@@ -41,18 +41,22 @@ export async function handleCreateHighlight(
   app: uws.TemplatedApp,
   msg: CreateHighlightMessage
 ) {
-  const { userId, range, postId, containerSelector } = msg;
+  const { userId, range, postId, containerSelector, initialReply } = msg;
   logger.info(`Highlight for ${postId} by ${userId}`);
-  const id = await db.Page.makeHighlight(postId as PageId, {
+  const highlight = await db.Page.makeHighlight(postId as PageId, {
     userId: userId as UserId,
     range,
     containerSelector,
+    initialReply,
   });
 
+  const { replies, ...rest } = highlight;
+
   const newMsg: HighlightCreatedMessage = {
-    ...msg,
+    ...rest,
     kind: Codes.HighlightCreated,
-    id,
+    postId,
+    reply: replies[0],
   };
 
   if (VALIDATE_OUTGOING_MESSAGES) {

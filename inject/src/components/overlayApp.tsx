@@ -34,11 +34,11 @@ import {
 import HighlightButton, { ButtonStatus } from "./highlightButton";
 import _ from "lodash-es";
 import PermanentHighlighter, {
-  PermanentHighlight,
   PermanentHighlighterProps,
 } from "./highlighter/permanentHighlighter";
-import { UserId } from "@site/db/types.server";
+import { HighlightId, ReplyId, UserId } from "@site/db/types.server";
 import CursorChat from "src/vendor/cursor-chat";
+import { HighlightWithActiveRanges } from "./highlighter/sharedTypes";
 
 // I hate the pattern of stuff something inside a "go" function
 // This is my solution
@@ -113,12 +113,22 @@ const App = () => {
 
   const handleHighlightCreated = useCallback(
     (msg: HighlightCreatedMessage) => {
-      const { userId: highlightUserId, range, id, containerSelector } = msg;
+      const {
+        userId: highlightUserId,
+        range,
+        id,
+        containerSelector,
+        reply,
+      } = msg;
 
-      const highlight: PermanentHighlight = {
+      const highlight: HighlightWithActiveRanges = {
+        id: id as HighlightId,
         ranges: rangee.deserializeAtomic(range),
         userId: highlightUserId as UserId,
         containerSelector,
+        replies: [
+          { ...reply, userId: reply.userId as UserId, id: reply.id as ReplyId },
+        ],
       };
 
       setPermanentHighlights((highlights) => ({
@@ -132,7 +142,6 @@ const App = () => {
   const handleSubscribed = useCallback(
     (msg: SubscribedMessage) => {
       const { highlights: newestHighlights } = msg;
-      //@ts-ignore -- really should fix this, this has caused at least one bug so far
       const deserialized: PermanentHighlighterProps["highlights"] = _.mapValues(
         newestHighlights,
         ({ range, ...rest }) => ({
@@ -240,6 +249,14 @@ const App = () => {
       // by raising number of tries
       maxNumberOfTries: 3000,
     });
+
+    const commentText = prompt("Write your commment");
+    const userClickedCancel = commentText === null;
+    if (userClickedCancel) {
+      setHighlightStatus(HighlightStatus.Ready);
+      return;
+    }
+
     // TODO: We should maybe try the selector (unless
     // the library guarantees the selector is valid ??)
 
@@ -249,6 +266,7 @@ const App = () => {
       userId,
       range: selection.serializedRange,
       containerSelector: selector,
+      initialReply: commentText,
     };
     sendMessage(pack(msg), false);
   }, [selection, userId]);

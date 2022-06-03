@@ -1,5 +1,12 @@
 import lmdb, { open } from "lmdb";
-import type { DB, HighlightId, PageId, Reply, UserId } from "./types.server";
+import type {
+  DB,
+  HighlightId,
+  PageId,
+  Reply,
+  ReplyId,
+  UserId,
+} from "./types.server";
 import { MAXIMUM_KEY } from "ordered-binary";
 import short from "short-uuid";
 import _ from "lodash-es";
@@ -18,7 +25,6 @@ type RawPage = {
 type RawHighlight = {
   containerSelector: string;
   userId: UserId;
-  date: Date;
   range: string;
   replies: Reply[];
 };
@@ -84,15 +90,31 @@ export default class DBImpl implements DB {
       return highlights;
     };
 
-  #makeHighlight: DB["Page"]["makeHighlight"] = async (postId, comment) => {
+  #makeHighlight: DB["Page"]["makeHighlight"] = async (
+    postId,
+    { userId, range, containerSelector, initialReply }
+  ) => {
     const date = new Date();
-    const highlightId = short.generate();
-    await this.highlights.put([postId, highlightId], {
-      ...comment,
-      date,
-      replies: [],
-    });
-    return highlightId.toString() as HighlightId;
+    const highlightId = short.generate().toString() as HighlightId;
+
+    const replyId = short.uuid();
+
+    const highlight = {
+      userId,
+      range,
+      containerSelector,
+      replies: [
+        {
+          id: replyId.toString() as ReplyId,
+          text: initialReply,
+          userId,
+          date,
+        },
+      ],
+    };
+
+    await this.highlights.put([postId, highlightId], highlight);
+    return { ...highlight, id: highlightId };
   };
 
   #makeHighlightReply: DB["Page"]["makeHighlightReply"] = async (
@@ -105,7 +127,15 @@ export default class DBImpl implements DB {
 
       const newHighlight = {
         ...highlight,
-        replies: [...highlight.replies, { text, date: new Date(), userId }],
+        replies: [
+          ...highlight.replies,
+          {
+            text,
+            date: new Date(),
+            userId,
+            id: short.uuid().toString() as ReplyId,
+          },
+        ],
       };
       await this.highlights.put([postId, highlightId], newHighlight);
     });

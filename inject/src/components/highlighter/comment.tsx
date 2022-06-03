@@ -129,8 +129,6 @@ export default function ({
         top: y,
         left: x,
         width: COMMENT_BOX_WIDTH,
-        // TODO: Maybe bad to have exterior padding?
-        // padding: COMMENT_BOX_PADDING,
         transitionProperty: "top, left, transform, box-shadow",
         // Tailwind CSS transition function
         transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
@@ -144,7 +142,7 @@ export default function ({
             <div className="font-semibold text-base">Anon. Badger</div>
             <div className="font-normal text-gray-400"> · 9y ago</div>
           </HeaderRow>
-          <p className="mt-2 px-4 pb-4 break-words">{highlightId}</p>
+          <p className="mt-2 px-4 pb-4 break-words">{r.text}</p>
           {idx < replies.length - 1 ? (
             <Divider fullWidth={false} />
           ) : (

@@ -1,10 +1,15 @@
-import { HighlightId, UserId } from "@site/db/types.server";
+import { HighlightId, Reply, UserId, Highlight } from "@site/db/types.server";
 import { Rect } from "src/utils/rect";
 
-export type DeserializedPermanentHighlight = {
-  userId: UserId;
-  container: Element;
-  rects: Rect[];
+export type HighlightWithActiveRanges = Omit<Highlight, "range"> & {
+  ranges: Range[];
+};
+
+export type InstantiatedHighlight = Omit<
+  HighlightWithActiveRanges,
+  "ranges" | "containerSelector"
+> & {
   area: number;
-  id: HighlightId;
+  rects: Rect[];
+  container: Element;
 };

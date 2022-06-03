@@ -3,6 +3,7 @@ import clsx from "clsx";
 import React from "react";
 
 const HighlightButton = tw.button(`
+    font-sans
     absolute
     bg-blue-400
     hover:bg-blue-500
@@ -59,7 +60,7 @@ export default function ({ status, x, y, ...props }: HighlightButtonProps) {
       ? "Submitting"
       : status === ButtonStatus.Initializing
       ? "Initializing"
-      : "Highlight";
+      : "Comment";
 
   const noClick =
     status === ButtonStatus.Initializing || status === ButtonStatus.Submitting;

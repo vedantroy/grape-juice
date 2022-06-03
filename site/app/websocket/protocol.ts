@@ -26,6 +26,7 @@ export { Codes };
 
 export const Reply = zod.object({
   userId: z.string(),
+  id: z.string(),
   date: z.date(),
   text: z.string(),
 });
@@ -34,7 +35,6 @@ export type Reply = zod.infer<typeof Reply>;
 export const Highlight = zod.object({
   id: z.string(),
   range: z.string(),
-  date: z.date(),
   userId: z.string(),
   replies: z.array(Reply),
   containerSelector: z.string(),
@@ -74,15 +74,20 @@ export const CreateHighlightMessage = zod.object({
   userId: z.string().uuid(),
   range: z.string(),
   containerSelector: z.string(),
+  initialReply: z.string(),
 });
 export type CreateHighlightMessage = zod.infer<typeof CreateHighlightMessage>;
 
-export const HighlightCreatedMessage = CreateHighlightMessage.merge(
-  zod.object({
-    kind: z.literal(Codes.HighlightCreated),
-    id: z.string(),
-  })
-);
+export const HighlightCreatedMessage = zod.object({
+  id: z.string(),
+  kind: z.literal(Codes.HighlightCreated),
+  postId: z.string(),
+  userId: z.string().uuid(),
+  range: z.string(),
+  containerSelector: z.string(),
+  reply: Reply,
+});
+
 export type HighlightCreatedMessage = zod.infer<typeof HighlightCreatedMessage>;
 
 export const Message = zod.union([
