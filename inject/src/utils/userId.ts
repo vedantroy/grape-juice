@@ -4,11 +4,11 @@ import type { UserId } from "@site/db/types.server";
 import colors from "src/generated/colors";
 import animalNames from "src/generated/animalNames";
 
-const DEBUG = true;
-
 const USER_ID_KEY = "userId";
 export async function getUserIdOtherwiseCreateNew(): Promise<string> {
-  const db = DEBUG ? new ImmortalStorage([LocalStorageStore]) : ImmortalDB;
+  const db = import.meta.env.DEV
+    ? new ImmortalStorage([LocalStorageStore])
+    : ImmortalDB;
   const userId = await ImmortalDB.get(USER_ID_KEY);
   if (userId === null) {
     const uuid = short.uuid();
