@@ -52,10 +52,19 @@ function runAsync(f: Function) {
 const HIGHLIGHT_BUTTON_OFFSET = 50;
 const rangee = new Rangee({ document });
 
-const reconnectToastId = "reconnect-toast";
-const connectingToastId = "connect-toast";
+declare global {
+  var __INJECTED_PAGE_ID: PageId;
+  var __INJECTED_WEBSOCKET_URL: string;
+  var __INJECTED_CURSOR_CHAT_URL: string;
+}
 
-const CHANNEL = "foobar";
+const CHANNEL = import.meta.env.DEV ? "test" : window.__INJECTED_PAGE_ID;
+const WEBSOCKET_URL = import.meta.env.DEV
+  ? "ws://localhost:9001/test"
+  : window.__INJECTED_WEBSOCKET_URL;
+const CURSOR_CHAT_URL = import.meta.env.DEV
+  ? "ws://localhost:9002"
+  : window.__INJECTED_CURSOR_CHAT_URL;
 
 const HighlightStatus = {
   Ready: "ready",
@@ -66,14 +75,11 @@ const HighlightStatus = {
 type HighlightStatus = typeof HighlightStatus[keyof typeof HighlightStatus];
 
 const App = () => {
-  const { sendMessage, lastMessage, readyState } = useWebSocket(
-    `ws://localhost:9001/${CHANNEL}`,
-    {
-      onOpen() {
-        console.log("websocket opened");
-      },
-    }
-  );
+  const { sendMessage, lastMessage, readyState } = useWebSocket(WEBSOCKET_URL, {
+    onOpen() {
+      console.log("websocket opened");
+    },
+  });
 
   const [highlightStatus, setHighlightStatus] = useState<HighlightStatus>(
     HighlightStatus.Ready
@@ -91,7 +97,7 @@ const App = () => {
   useEffect(() => {
     if (!userId) return;
     const color = getColorFromUserId(userId as UserId);
-    new CursorChat("ws://localhost:1234", color);
+    new CursorChat(CURSOR_CHAT_URL, color);
   }, [userId]);
 
   const handleSelection = useCallback(
