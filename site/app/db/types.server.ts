@@ -57,6 +57,7 @@ export interface DB {
         highlightId: HighlightId;
         text: string;
       }
-    ): MaybePromise<void>;
+      // returns null if there was no highlight with the given id
+    ): MaybePromise<Reply[] | null>;
   };
 }

@@ -18,6 +18,7 @@ import {
   CreateHighlightMessage,
   HighlightCreatedMessage,
   SubscribedMessage,
+  UpdateHighlightRepliesMessage,
 } from "@site/websocket/protocol";
 
 // https://github.com/vitejs/vite/issues/3246
@@ -139,6 +140,23 @@ const App = () => {
     [userId]
   );
 
+  const handleUpdateHighlightReplies = useCallback(
+    (msg: UpdateHighlightRepliesMessage) => {
+      const { highlightId, replies } = msg;
+
+      // TODO: Somewhat of a performance hit here
+      // b/c we're updating the highlights object, which causes
+      // re-calculation of all highlights even though we really just need
+      // to update the replies
+
+      setPermanentHighlights((highlights) => {
+        const oldHighlight = highlights[highlightId as HighlightId];
+        return { ...highlights, [highlightId]: { ...oldHighlight, replies } };
+      });
+    },
+    [userId]
+  );
+
   const handleSubscribed = useCallback(
     (msg: SubscribedMessage) => {
       const { highlights: newestHighlights } = msg;
@@ -196,6 +214,9 @@ const App = () => {
           break;
         case Codes.Subscribed:
           handleSubscribed(msg);
+          break;
+        case Codes.UpdateHighlightReplies:
+          handleUpdateHighlightReplies(msg);
           break;
         default:
           console.log(`Unexpected message: ${msg.kind}`);

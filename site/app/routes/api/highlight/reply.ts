@@ -1,23 +1,26 @@
 import { ActionFunction } from "@remix-run/node";
-import db from "~/db/index.server";
-import { HighlightId, PageId, UserId } from "~/db/types.server";
 import { ALLOW_CORS_HEADERS, CORSPreflightLoader } from "~/helpers/cors";
+import { app } from "~/websocket";
+import { handleCreateHighlightReply } from "~/websocket/handlers";
 import { ReplyCreatedPayload } from "~/websocket/protocol";
 
+// TODO: There are some weird build shenanigans going on here.
+// (I need to copy the .node file to the build folder)
+
 export const action: ActionFunction = async ({ request }) => {
-  const {
-    postId,
-    highlightId,
-    reply: { userId, text },
-  } = ReplyCreatedPayload.parse(await request.json());
-  await db.Page.makeHighlightReply(postId as PageId, {
-    userId: userId as UserId,
-    text,
-    highlightId: highlightId as HighlightId,
-  });
-  return new Response("", {
+  const msg = ReplyCreatedPayload.parse(await request.json());
+  const bytes = await handleCreateHighlightReply(app, msg);
+  if (!bytes) {
+    return new Response("No highlight found", {
+      headers: ALLOW_CORS_HEADERS,
+      status: 404,
+    });
+  }
+
+  return new Response(bytes, {
     headers: {
       ...ALLOW_CORS_HEADERS,
+      "Content-Type": "application/octet-stream",
     },
   });
 };

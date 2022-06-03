@@ -6,7 +6,11 @@ import { getColorFromUserId } from "src/utils/userId";
 import { HighlightId, PageId, Reply, UserId } from "@site/db/types.server";
 import TextAreaAutosize from "react-textarea-autosize";
 import { formatDistanceToNowStrict } from "date-fns";
-import { ReplyCreatedPayload } from "@site/websocket/protocol";
+import {
+  ReplyCreatedPayload,
+  UpdateHighlightRepliesMessage,
+} from "@site/websocket/protocol";
+import { unpack } from "msgpackr";
 
 type CommentProps = {
   x: number;
@@ -127,7 +131,7 @@ export default function ({
 
   return (
     <Comment
-      onClick={(e) => {
+      onClick={async (e) => {
         // Necessary because we don't want the document's
         // onClick listener to be triggered because that will
         // set the active highlight to null.
@@ -152,20 +156,28 @@ export default function ({
             highlightId,
           };
 
-          fetch("http://localhost:3000/api/highlight/reply", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-          })
-            .then((res) => {
-              setSubmitting(false);
-              setText("");
-            })
-            .catch((e) => {
-              console.log(e);
-            });
+          let response: Response;
+          try {
+            response = await fetch(
+              "http://localhost:3000/api/highlight/reply",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+              }
+            );
+          } catch (e) {
+            console.log(e);
+            return;
+          }
+
+          const resp = UpdateHighlightRepliesMessage.parse(
+            unpack(new Uint8Array(await response.arrayBuffer()))
+          );
+          setSubmitting(false);
+          setText("");
         } else {
           onHighlightId(highlightId);
         }

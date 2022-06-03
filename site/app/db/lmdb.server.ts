@@ -120,24 +120,28 @@ export default class DBImpl implements DB {
   #makeHighlightReply: DB["Page"]["makeHighlightReply"] = async (
     postId,
     { userId, highlightId, text }
-  ): Promise<void> => {
-    await this.highlights.transaction(async () => {
+  ) => {
+    const replies = await this.highlights.transaction(async () => {
       const highlight = this.highlights.get([postId, highlightId]);
       if (!highlight) return;
 
+      const replies = [
+        ...highlight.replies,
+        {
+          text,
+          date: new Date(),
+          userId,
+          id: short.uuid().toString() as ReplyId,
+        },
+      ];
+
       const newHighlight = {
         ...highlight,
-        replies: [
-          ...highlight.replies,
-          {
-            text,
-            date: new Date(),
-            userId,
-            id: short.uuid().toString() as ReplyId,
-          },
-        ],
+        replies,
       };
       await this.highlights.put([postId, highlightId], newHighlight);
+      return replies;
     });
+    return Array.isArray(replies) ? replies : null;
   };
 }

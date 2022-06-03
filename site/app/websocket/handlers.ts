@@ -5,11 +5,13 @@ import {
   Codes,
   CreateHighlightMessage,
   HighlightCreatedMessage,
+  ReplyCreatedPayload,
   SubscribedMessage,
+  UpdateHighlightRepliesMessage,
 } from "./protocol";
 import logger from "../services/logger";
 import db from "../db/index.server";
-import { PageId, UserId } from "../db/types.server";
+import { HighlightId, PageId, UserId } from "../db/types.server";
 
 function getPostChannel(postId: string): string {
   return `/post/${postId}`;
@@ -64,6 +66,38 @@ export async function handleCreateHighlight(
   }
 
   await publishMessage(app, postId, pack(newMsg));
+}
+
+// Called from the REST API
+export async function handleCreateHighlightReply(
+  app: uws.TemplatedApp,
+  msg: ReplyCreatedPayload
+): Promise<Buffer | null> {
+  const {
+    postId,
+    highlightId,
+    reply: { userId, text },
+  } = msg;
+  const replies = await db.Page.makeHighlightReply(postId as PageId, {
+    userId: userId as UserId,
+    text,
+    highlightId: highlightId as HighlightId,
+  });
+
+  if (!replies) return null;
+
+  const newMsg: UpdateHighlightRepliesMessage = {
+    kind: Codes.UpdateHighlightReplies,
+    highlightId,
+    postId,
+    replies,
+  };
+
+  const bytes = pack(newMsg);
+  // Calling `.slice` because I don't want to run into mysterious
+  // detached buffer errors (to be seen if this fixes them)
+  publishMessage(app, postId, bytes.slice());
+  return bytes;
 }
 
 export async function handleSubscribe(ws: WebSocket, postId: PageId) {

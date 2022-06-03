@@ -12,7 +12,7 @@ import { Message, Codes } from "./protocol";
 
 const PORT = 9001;
 
-const app = uWS.App({}).ws("/*", {
+export const app = uWS.App({}).ws("/*", {
   message: (ws, bytes, isBinary) => {
     invariant(isBinary, "Websocket messages must be binary");
     const unpacked = unpack(Buffer.from(bytes));

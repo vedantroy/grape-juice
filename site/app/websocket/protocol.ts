@@ -5,10 +5,11 @@ const Codes = {
   Selection: 1,
   ClearSelection: 2,
   CreateHighlight: 3,
+  UpdateHighlightReplies: 4,
 
   // Never received, only sent to client
-  HighlightCreated: 4,
-  Subscribed: 5,
+  HighlightCreated: 5,
+  Subscribed: 6,
 } as const;
 
 export { Codes };
@@ -87,8 +88,17 @@ export const HighlightCreatedMessage = zod.object({
   containerSelector: z.string(),
   reply: Reply,
 });
-
 export type HighlightCreatedMessage = zod.infer<typeof HighlightCreatedMessage>;
+
+export const UpdateHighlightRepliesMessage = zod.object({
+  kind: z.literal(Codes.UpdateHighlightReplies),
+  postId: z.string(),
+  highlightId: z.string(),
+  replies: zod.array(Reply),
+});
+export type UpdateHighlightRepliesMessage = zod.infer<
+  typeof UpdateHighlightRepliesMessage
+>;
 
 export const Message = zod.union([
   SubscribeMessage,
@@ -97,6 +107,7 @@ export const Message = zod.union([
   ClearSelectionMessage,
   CreateHighlightMessage,
   HighlightCreatedMessage,
+  UpdateHighlightRepliesMessage,
 ]);
 export type Message = zod.infer<typeof Message>;
 

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ActionFunction, LoaderFunction, json } from "@remix-run/node";
+import { ActionFunction } from "@remix-run/node";
 import DB from "~/db/index.server";
 import { HOST_URL } from "~/services/env";
 import { ALLOW_CORS_HEADERS, CORSPreflightLoader } from "~/helpers/cors";
