@@ -183,6 +183,10 @@ const App = () => {
 
       const bytes = new Uint8Array(await lastMessage!!.data.arrayBuffer());
       const unvalidated = unpack(bytes);
+
+      console.log("UNVALIDATED");
+      console.log(unvalidated);
+
       const msg = Message.parse(unvalidated);
 
       const sentDirectlyToUs = !(msg as any).userId;

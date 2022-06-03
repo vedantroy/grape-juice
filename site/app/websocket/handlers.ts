@@ -64,8 +64,7 @@ export async function handleCreateHighlight(
   if (VALIDATE_OUTGOING_MESSAGES) {
     HighlightCreatedMessage.parse(newMsg);
   }
-
-  await publishMessage(app, postId, pack(newMsg));
+  publishMessage(app, postId, pack(newMsg));
 }
 
 // Called from the REST API
@@ -92,6 +91,10 @@ export async function handleCreateHighlightReply(
     postId,
     replies,
   };
+
+  //console.log("MANUAL PUBLISH");
+  //console.log(app.numSubscribers("/post/foobar"));
+  //app.publish("/post/foobar", pack({ kind: 5 }), true);
 
   const bytes = pack(newMsg);
   // Calling `.slice` because I don't want to run into mysterious
