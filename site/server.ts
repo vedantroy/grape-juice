@@ -3,7 +3,7 @@ import express from "express";
 import compression from "compression";
 import morgan from "morgan";
 import { createRequestHandler } from "@remix-run/express";
-import initWebSocketOnce from "./app/websocket";
+import { initWebSocketOnce } from "./app/websocket";
 
 //const path = require("path");
 //const express = require("express");
@@ -51,7 +51,7 @@ app.all(
 );
 const port = process.env.PORT || 3000;
 
-const server = app.listen(port, () => {
+app.listen(port, () => {
   console.log(`Express server listening on port ${port}`);
 });
 

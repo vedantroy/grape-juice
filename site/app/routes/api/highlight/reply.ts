@@ -1,6 +1,6 @@
 import { ActionFunction } from "@remix-run/node";
 import { ALLOW_CORS_HEADERS, CORSPreflightLoader } from "~/helpers/cors";
-import { app } from "~/websocket";
+import { getApp } from "~/websocket";
 import { handleCreateHighlightReply } from "~/websocket/handlers";
 import { ReplyCreatedPayload } from "~/websocket/protocol";
 
@@ -9,7 +9,7 @@ import { ReplyCreatedPayload } from "~/websocket/protocol";
 
 export const action: ActionFunction = async ({ request }) => {
   const msg = ReplyCreatedPayload.parse(await request.json());
-  const bytes = await handleCreateHighlightReply(app, msg);
+  const bytes = await handleCreateHighlightReply(getApp(), msg);
   if (!bytes) {
     return new Response("No highlight found", {
       headers: ALLOW_CORS_HEADERS,
