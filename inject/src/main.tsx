@@ -8,6 +8,7 @@ function injectReactApp(app: React.ReactElement, suffix: string) {
 
   const div = document.createElement("div");
   div.id = CONTAINER_ID;
+  div.style.all = "initial";
   document.body.appendChild(div);
   createRoot(div).render(app);
 }

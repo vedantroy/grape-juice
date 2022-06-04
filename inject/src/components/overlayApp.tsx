@@ -304,7 +304,7 @@ const App = () => {
 
   return (
     <>
-      <div>
+      <div style={{ all: "initial" }}>
         <ReactShadowRoot>
           <style type="text/css">{twStyles}</style>
           {/* <style id="toastify" type="text/css"> {toastStyles}</style> */}
@@ -330,7 +330,7 @@ const App = () => {
           <ToastContainer pauseOnFocusLoss={false} pauseOnHover={false} />
         </ReactShadowRoot>
       </div>
-      <div>
+      <div style={{ all: "initial" }}>
         {userId && (
           <CursorChat
             userId={userId as UserId}

@@ -31,7 +31,7 @@ export default function ({
   }, [input]);
 
   return (
-    <div ref={ref}>
+    <div style={{ all: "initial" }} ref={ref}>
       <ReactShadowRoot>
         <style type="text/css">{styles}</style>
         {/* This might be unsafe b/c react can dynamically construct & destroy
