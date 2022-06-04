@@ -7,7 +7,6 @@ export interface Rewriter {
     html: string,
     data: {
       scriptSrc: string;
-      cssSrc: string;
       cursorChatUrl: string;
       websocketRootUrl: string;
       postId: PostId;

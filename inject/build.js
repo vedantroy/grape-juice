@@ -14,15 +14,13 @@ fs.rmSync(DEST_DIR, { recursive: true });
 fs.mkdirSync(DEST_DIR);
 fs.copySync(SRC_DIR, DEST_DIR);
 
-const cssFile = fs.readdirSync(SRC_DIR).find((f) => f.endsWith(".css"));
 const jsFile = fs.readdirSync(SRC_DIR).find((f) => f.endsWith(".js"));
 
-console.log(cssFile, jsFile);
+console.log(jsFile);
 
 const ROOT = "/inject";
 const code = `
 export const SCRIPT_SRC = "${ROOT}/${jsFile}";
-export const CSS_SRC = "${ROOT}/${cssFile}";
 `;
 
 fs.writeFileSync(

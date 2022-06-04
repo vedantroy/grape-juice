@@ -6,10 +6,7 @@ export const regexRewriter: Rewriter = {
   makeLinksAbsolute(html, { origin }) {
     return "";
   },
-  injectOverlay(
-    html,
-    { scriptSrc, cssSrc, cursorChatUrl, websocketRootUrl, postId }
-  ) {
+  injectOverlay(html, { scriptSrc, cursorChatUrl, websocketRootUrl, postId }) {
     const headTag = html.indexOf("</head>");
     let beforeHead = html.slice(0, headTag);
     const afterHead = html.slice(headTag);
@@ -22,9 +19,7 @@ export const regexRewriter: Rewriter = {
     	  window.__INJECTED_CURSOR_CHAT_URL = "${cursorChatUrl}";
     	</script>
     `;
-    beforeHead += `<link rel="stylesheet" href="${cssSrc}">`;
     beforeHead += `<script type="module" src="${scriptSrc}"></script>`;
-
     return beforeHead + afterHead;
   },
 };
