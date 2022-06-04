@@ -3,7 +3,7 @@ import React, { Fragment, useEffect, useRef, useState } from "react";
 import useResizeObserver from "use-resize-observer";
 import tw from "@site/components/tw-styled";
 import { getAnimalNameFromUserId, getColorFromUserId } from "src/utils/userId";
-import { HighlightId, PageId, Reply, UserId } from "@site/db/types.server";
+import { HighlightId, PostId, Reply, UserId } from "@site/db/types.server";
 import TextAreaAutosize from "react-textarea-autosize";
 import { formatDistanceToNowStrict } from "date-fns";
 import {
@@ -23,7 +23,7 @@ type CommentProps = {
   isActive: boolean;
   // For debugging
   highlightId: HighlightId;
-  postId: PageId;
+  postId: PostId;
   replies: Array<Reply>;
 };
 

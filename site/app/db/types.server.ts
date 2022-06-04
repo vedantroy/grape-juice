@@ -1,8 +1,8 @@
 import { Brand } from "ts-brand";
 
-export type PageId = Brand<string, "PageId">;
+export type PostId = Brand<string, "PostId">;
 
-// key = PageId
+// key = PostId
 export type Page = {
   html: string;
   url: string;
@@ -34,15 +34,15 @@ type MaybePromise<T> = T | Promise<T>;
 
 export interface DB {
   Page: {
-    slugToPageId(slug: string): PageId;
-    makePage(args: Pick<Page, "html" | "url" | "title">): MaybePromise<PageId>;
+    slugToPageId(slug: string): PostId;
+    makePage(args: Pick<Page, "html" | "url" | "title">): MaybePromise<PostId>;
     // Used by Remix for initial page load (embed highlights in)
-    getPageWithHighlightsAndReplies(id: PageId): MaybePromise<Page | null>;
+    getPageWithHighlightsAndReplies(id: PostId): MaybePromise<Page | null>;
     getPageHighlightsAndReplies(
-      id: PageId
+      id: PostId
     ): MaybePromise<Record<HighlightId, Highlight>>;
     makeHighlight(
-      id: PageId,
+      id: PostId,
       highlight: {
         userId: UserId;
         range: string;
@@ -51,7 +51,7 @@ export interface DB {
       }
     ): MaybePromise<Highlight>;
     makeHighlightReply(
-      id: PageId,
+      id: PostId,
       reply: {
         userId: UserId;
         highlightId: HighlightId;

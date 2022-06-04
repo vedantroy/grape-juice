@@ -2,7 +2,7 @@ import lmdb, { open } from "lmdb";
 import type {
   DB,
   HighlightId,
-  PageId,
+  PostId,
   Reply,
   ReplyId,
   UserId,
@@ -54,7 +54,7 @@ export default class DBImpl implements DB {
       getPageHighlightsAndReplies: this.#getPageHighlightsAndReplies,
       makeHighlightReply: this.#makeHighlightReply,
       // Store short UUIDs directly in the DB
-      slugToPageId: (x) => x as PageId,
+      slugToPageId: (x) => x as PostId,
     };
     this.translator = short();
   }
@@ -62,7 +62,7 @@ export default class DBImpl implements DB {
   #makePage: DB["Page"]["makePage"] = async ({ html, url, title }) => {
     const postId = short.generate();
     await this.pages.put(postId, { html, url, title, date: new Date() });
-    return postId as string as PageId;
+    return postId as string as PostId;
   };
 
   #getPageWithHighlightsAndReplies: DB["Page"]["getPageWithHighlightsAndReplies"] =

@@ -1,4 +1,4 @@
-import { HighlightId, PageId, ReplyId, UserId } from "@site/db/types.server";
+import { HighlightId, PostId, ReplyId, UserId } from "@site/db/types.server";
 import _ from "lodash-es";
 import React, { useEffect, useMemo, useState } from "react";
 import { Container } from "./container";
@@ -11,7 +11,7 @@ type CommentBoxProps = {
   highlights: InstantiatedHighlight[];
   commentClicked: (highlightId: HighlightId | null) => void;
   activeHighlightId: HighlightId | null;
-  postId: PageId;
+  postId: PostId;
 };
 
 const COMMENT_BOX_OFFSET = 20;

@@ -11,11 +11,8 @@ import {
 } from "./protocol";
 import logger from "../services/logger";
 import db from "../db/index.server";
-import { HighlightId, PageId, UserId } from "../db/types.server";
-
-function getPostChannel(postId: string): string {
-  return `/post/${postId}`;
-}
+import { HighlightId, PostId, UserId } from "../db/types.server";
+import { getPostChannel } from "./utils";
 
 const VALIDATE_OUTGOING_MESSAGES = true;
 
@@ -45,7 +42,7 @@ export async function handleCreateHighlight(
 ) {
   const { userId, range, postId, containerSelector, initialReply } = msg;
   logger.info(`Highlight for ${postId} by ${userId}`);
-  const highlight = await db.Page.makeHighlight(postId as PageId, {
+  const highlight = await db.Page.makeHighlight(postId as PostId, {
     userId: userId as UserId,
     range,
     containerSelector,
@@ -77,7 +74,7 @@ export async function handleCreateHighlightReply(
     highlightId,
     reply: { userId, text },
   } = msg;
-  const replies = await db.Page.makeHighlightReply(postId as PageId, {
+  const replies = await db.Page.makeHighlightReply(postId as PostId, {
     userId: userId as UserId,
     text,
     highlightId: highlightId as HighlightId,
@@ -103,7 +100,7 @@ export async function handleCreateHighlightReply(
   return bytes;
 }
 
-export async function handleSubscribe(ws: WebSocket, postId: PageId) {
+export async function handleSubscribe(ws: WebSocket, postId: PostId) {
   const highlights = await db.Page.getPageHighlightsAndReplies(postId);
   if (!highlights) return null;
 

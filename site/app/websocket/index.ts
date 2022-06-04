@@ -1,6 +1,6 @@
 import { unpack } from "msgpackr";
 import invariant from "tiny-invariant";
-import { PageId } from "~/db/types.server";
+import { PostId } from "~/db/types.server";
 // Seems like tsx does not respect import maps
 import uWS from "../lib/uws";
 import {
@@ -31,7 +31,7 @@ export function getApp(): uWS.TemplatedApp {
           publishMessage(app, postId, bytes);
         } else if (msg.kind === Codes.Subscribe) {
           const { postId } = msg;
-          handleSubscribe(ws, postId as PageId);
+          handleSubscribe(ws, postId as PostId);
         } else if (msg.kind === Codes.CreateHighlight) {
           handleCreateHighlight(app, msg);
         }

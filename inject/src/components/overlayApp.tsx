@@ -37,9 +37,10 @@ import _ from "lodash-es";
 import PermanentHighlighter, {
   PermanentHighlighterProps,
 } from "./highlighter/permanentHighlighter";
-import { HighlightId, PageId, ReplyId, UserId } from "@site/db/types.server";
+import { HighlightId, PostId, ReplyId, UserId } from "@site/db/types.server";
 import CursorChat from "src/vendor/cursor-chat";
 import { HighlightWithActiveRanges } from "./highlighter/sharedTypes";
+import invariant from "tiny-invariant";
 
 // I hate the pattern of stuff something inside a "go" function
 // This is my solution
@@ -53,24 +54,26 @@ const HIGHLIGHT_BUTTON_OFFSET = 50;
 const rangee = new Rangee({ document });
 
 declare global {
-  var __INJECTED_PAGE_ID: PageId;
-  var __INJECTED_WEBSOCKET_URL: string;
+  var __INJECTED_POST_ID: PostId;
+  var __INJECTED_WEBSOCKET_CHANNEL_URL: string;
   var __INJECTED_CURSOR_CHAT_URL: string;
 }
 
-const CHANNEL = import.meta.env.DEV ? "test" : window.__INJECTED_PAGE_ID;
+const CHANNEL = import.meta.env.DEV ? "test" : window.__INJECTED_POST_ID;
 const WEBSOCKET_URL = import.meta.env.DEV
   ? "ws://localhost:9001/test"
-  : window.__INJECTED_WEBSOCKET_URL;
+  : window.__INJECTED_WEBSOCKET_CHANNEL_URL;
 const CURSOR_CHAT_URL = import.meta.env.DEV
   ? "ws://localhost:9002"
   : window.__INJECTED_CURSOR_CHAT_URL;
 
+invariant(CHANNEL, "CHANNEL is not defined");
+invariant(WEBSOCKET_URL, "WEBSOCKET_URL is not defined");
+invariant(CURSOR_CHAT_URL, "CURSOR_CHAT_URL is not defined");
+
 const HighlightStatus = {
   Ready: "ready",
   Submitting: "submitting",
-  // This status is not used
-  Finished: "finished",
 } as const;
 type HighlightStatus = typeof HighlightStatus[keyof typeof HighlightStatus];
 
@@ -322,7 +325,7 @@ const App = () => {
           />
         ) : null}
         <PermanentHighlighter
-          postId={CHANNEL as PageId}
+          postId={CHANNEL as PostId}
           highlights={permanentHighlights}
         />
         <TransientHighlighter highlights={transientHighlights} />

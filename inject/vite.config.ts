@@ -6,6 +6,7 @@ import glob from "glob";
 export default defineConfig({
   plugins: [tsconfigPaths()],
   build: {
+    sourcemap: true,
     rollupOptions: {
       output: {
         dir: join(__dirname, "dist"),
