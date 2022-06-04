@@ -16,8 +16,6 @@ fs.copySync(SRC_DIR, DEST_DIR);
 
 const jsFile = fs.readdirSync(SRC_DIR).find((f) => f.endsWith(".js"));
 
-console.log(jsFile);
-
 const ROOT = "/inject";
 const code = `
 export const SCRIPT_SRC = "${ROOT}/${jsFile}";
