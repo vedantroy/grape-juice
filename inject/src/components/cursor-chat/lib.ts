@@ -1,16 +1,18 @@
-// Copied from w/ a few tweaks:
+// Forked from:
 // https://github.com/jackyzha0/cursor-chat/blob/master/src/main.ts
+// - Made it work inside of a Shadow DOM (to avoid interfering w/ page styles)
+
 // There's a lot of things I'm *not* doing here -- for example:
 // - There's no shadow DOM, so theoretically the cursors could get messed up // - (The CSS is injected into the head of the document, the horror!)
 // - I'm using y-websocket-server instead of integrating this into my uwebsockets stuff
 // but for a MVP, it's good enough
 // - I bet if I use uwebsockets + no yjs this will be 10x faster / smoother
 
-import "./index.css";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 import { nanoid } from "nanoid";
 import { PerfectCursor } from "perfect-cursors";
+import invariant from "tiny-invariant";
 
 interface Cursor {
   id: string;
@@ -24,6 +26,9 @@ interface Cursor {
 
 type ReplicatedCursor = Pick<Cursor, "id" | "color" | "x" | "y" | "chat">;
 
+export const ID_CURSOR_CHAT_LAYER = "cursor-chat-layer";
+export const ID_CURSOR_CHAT_BOX = "cursor-chat-box";
+
 export default class CursorChat {
   self_id: string;
   room_id: string;
@@ -32,17 +37,77 @@ export default class CursorChat {
   me: Cursor;
   others: Map<string, Cursor>;
   replicated_cursors: Y.Map<ReplicatedCursor>;
-  cursorLayerDiv: HTMLElement;
   intervalId: number;
   toUpdate: boolean;
 
-  constructor(wsProvider: string, color: string) {
-    const ld = document.getElementById("cursor-chat-layer");
-    const chat = document.getElementById("cursor-chat-box") as HTMLInputElement;
-    if (!(ld && chat)) {
-      throw `Couldn't find cursor-chat-related divs! Make sure DOM content is fully loaded before initializing`;
+  constructor(wsProvider: string, color: string, root: ShadowRoot) {
+    // This is in case React recreates & destroys the divs
+    // Although this is useless b/c if react is doing that, it
+    // might also destroy the cursor divs themselves
+    function getLd() {
+      const r = root.getElementById(ID_CURSOR_CHAT_LAYER);
+      invariant(r);
+      return r;
     }
-    this.cursorLayerDiv = ld;
+
+    function getChat() {
+      const r = root.getElementById(ID_CURSOR_CHAT_BOX);
+      invariant(r);
+      return r as HTMLInputElement;
+    }
+
+    function getCursorElement(c: Cursor | ReplicatedCursor) {
+      return root.getElementById(`cursor_${c.id}`);
+    }
+
+    function getChatElement(c: Cursor | ReplicatedCursor) {
+      return root.getElementById(`chat_${c.id}`);
+    }
+
+    function initializeCursor(c: ReplicatedCursor, div: HTMLElement): Cursor {
+      const htmlFragment = `<div id="cursor_${c.id}" class="cursor">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 35 35"
+      fill="none"
+      fillRule="evenodd"
+    >
+      <g fill="rgba(0,0,0,.2)" transform="translate(1,1)">
+        <path d="m12 24.4219v-16.015l11.591 11.619h-6.781l-.411.124z" />
+        <path d="m21.0845 25.0962-3.605 1.535-4.682-11.089 3.686-1.553z" />
+      </g>
+      <g fill="white">
+        <path d="m12 24.4219v-16.015l11.591 11.619h-6.781l-.411.124z" />
+        <path d="m21.0845 25.0962-3.605 1.535-4.682-11.089 3.686-1.553z" />
+      </g>
+      <g fill="${c.color}">
+        <path d="m19.751 24.4155-1.844.774-3.1-7.374 1.841-.775z" />
+        <path d="m13 10.814v11.188l2.969-2.866.428-.139h4.768z" />
+      </g>
+    </svg>
+    <p id="chat_${c.id}" class="chat" style="background-color: ${c.color}"></p>
+  </div>`;
+
+      const template = document.createElement("template");
+      template.innerHTML = htmlFragment;
+      const cursorEl = template.content.firstChild as HTMLElement;
+      cursorEl.classList.add("new");
+      div.appendChild(cursorEl);
+
+      const chatEl = getChatElement(c) as HTMLElement;
+      chatEl.innerText = c.chat;
+
+      function addPoint(point: number[]) {
+        const [x, y] = point;
+        cursorEl.style.setProperty("transform", `translate(${x}px, ${y}px)`);
+      }
+
+      return {
+        ...c,
+        pc: new PerfectCursor(addPoint),
+        nStale: 0,
+      };
+    }
 
     this.self_id = nanoid();
     this.room_id = `cursor-chat-room-${
@@ -56,9 +121,6 @@ export default class CursorChat {
     this.me = {
       id: this.self_id,
       color,
-      //color: randomcolor({
-      //  luminosity: "light",
-      //}),
       x: 0,
       y: 0,
       chat: "",
@@ -77,7 +139,7 @@ export default class CursorChat {
         this.me.x = evt.pageX;
         this.me.y = evt.pageY;
       }
-      chat.style.setProperty(
+      getChat().style.setProperty(
         "transform",
         `translate(${evt.pageX}px, ${evt.pageY}px)`
       );
@@ -107,6 +169,7 @@ export default class CursorChat {
 
     // setup key handlers
     document.addEventListener("keydown", (event) => {
+      const chat = getChat();
       if (event.key === "/" && chat.value === "") {
         event.preventDefault();
         if (chat.style.getPropertyValue("display") === "block") {
@@ -128,7 +191,7 @@ export default class CursorChat {
     });
 
     document.addEventListener("keyup", () => {
-      this.me.chat = chat.value;
+      this.me.chat = getChat().value;
       this.toUpdate = true;
     });
 
@@ -170,64 +233,11 @@ export default class CursorChat {
             this.others.set(cursor.id, updatedConcrete);
           } else {
             // new cursor, register and add to dom
-            const concrete = initializeCursor(cursor, this.cursorLayerDiv);
+            const concrete = initializeCursor(cursor, getLd());
             this.others.set(cursor.id, concrete);
           }
         }
       });
     });
   }
-}
-
-function initializeCursor(c: ReplicatedCursor, div: HTMLElement): Cursor {
-  const htmlFragment = `<div id="cursor_${c.id}" class="cursor">
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 35 35"
-      fill="none"
-      fillRule="evenodd"
-    >
-      <g fill="rgba(0,0,0,.2)" transform="translate(1,1)">
-        <path d="m12 24.4219v-16.015l11.591 11.619h-6.781l-.411.124z" />
-        <path d="m21.0845 25.0962-3.605 1.535-4.682-11.089 3.686-1.553z" />
-      </g>
-      <g fill="white">
-        <path d="m12 24.4219v-16.015l11.591 11.619h-6.781l-.411.124z" />
-        <path d="m21.0845 25.0962-3.605 1.535-4.682-11.089 3.686-1.553z" />
-      </g>
-      <g fill="${c.color}">
-        <path d="m19.751 24.4155-1.844.774-3.1-7.374 1.841-.775z" />
-        <path d="m13 10.814v11.188l2.969-2.866.428-.139h4.768z" />
-      </g>
-    </svg>
-    <p id="chat_${c.id}" class="chat" style="background-color: ${c.color}"></p>
-  </div>`;
-
-  const template = document.createElement("template");
-  template.innerHTML = htmlFragment;
-  const cursorEl = template.content.firstChild as HTMLElement;
-  cursorEl.classList.add("new");
-  div.appendChild(cursorEl);
-
-  const chatEl = getChatElement(c) as HTMLElement;
-  chatEl.innerText = c.chat;
-
-  function addPoint(point: number[]) {
-    const [x, y] = point;
-    cursorEl.style.setProperty("transform", `translate(${x}px, ${y}px)`);
-  }
-
-  return {
-    ...c,
-    pc: new PerfectCursor(addPoint),
-    nStale: 0,
-  };
-}
-
-function getCursorElement(c: Cursor | ReplicatedCursor) {
-  return document.getElementById(`cursor_${c.id}`);
-}
-
-function getChatElement(c: Cursor | ReplicatedCursor) {
-  return document.getElementById(`chat_${c.id}`);
 }

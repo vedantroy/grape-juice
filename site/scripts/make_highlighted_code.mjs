@@ -4,12 +4,21 @@ import shiki from "shiki";
 import invariant from "tiny-invariant";
 import * as fs from "fs";
 import { codeBlock } from "common-tags";
+import path from "path";
+
+// get file names in scripts folder
+const utilsFileName = fs.readdirSync(
+  path.join(process.cwd(), "public", "utils")
+)[0];
 
 const code = [
   {
     name: "createAnonPostCode",
     code: codeBlock`
-    const response = await fetch("$$hostUrl:string$$/api/upload", {
+    m = await import("$$hostUrl:string$$/utils/${utilsFileName}");
+    // If your site has CSS in JS, use this
+    m.serializeCSSInJSStyles(document);
+    response = await fetch("$$hostUrl:string$$/api/upload", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -48,11 +57,16 @@ async function go() {
     const highlighted = highlighter.codeToHtml(code, {
       lang: "javascript",
     });
+
+    let paramAdded = false;
     const withInterpolations = highlighted.replace(
-      /\$\$[a-zA-Z]+:[a-zA-Z]+\$\$/,
+      /\$\$[a-zA-Z]+:[a-zA-Z]+\$\$/g,
       (param) => {
         const [paramName, paramType] = param.slice(2, -2).split(":");
-        params.push({ name: paramName, type: paramType });
+        if (!paramAdded) {
+          paramAdded = true;
+          params.push({ name: paramName, type: paramType });
+        }
         return "${" + paramName + "}";
       }
     );

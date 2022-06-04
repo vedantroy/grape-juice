@@ -2,6 +2,7 @@ import path from "path";
 import express from "express";
 import compression from "compression";
 import morgan from "morgan";
+import cors from "cors";
 import { createRequestHandler } from "@remix-run/express";
 import { initWebSocketOnce } from "./app/websocket";
 
@@ -26,6 +27,10 @@ app.use(
   "/build",
   express.static("public/build", { immutable: true, maxAge: "1y" })
 );
+
+// TODO: Should I just enable cors on everything?
+// Then I can remove the CORs code in the app
+app.use("/utils/*", [cors()]);
 
 // Everything else (like favicon.ico) is cached for an hour. You may want to be
 // more aggressive with this caching.

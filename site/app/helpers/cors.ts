@@ -4,6 +4,7 @@ import { LoaderFunction } from "@remix-run/node";
 export const ALLOW_CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Origin, Content-Type",
+  "Access-Control-Allow-Private-Network": "true",
 } as const;
 
 export const CORSPreflightLoader: LoaderFunction = async () => {

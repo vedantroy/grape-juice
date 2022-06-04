@@ -14,10 +14,3 @@ function injectReactApp(app: React.ReactElement, suffix: string) {
 }
 
 injectReactApp(<OverlayApp />, "overlay");
-
-document.body.appendChild(
-  htmlToElement(`
-<div id="cursor-chat-layer">
-  <input type="text" id="cursor-chat-box">
-</div>`)
-);

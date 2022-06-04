@@ -5,7 +5,8 @@ import colors from "src/generated/colors";
 import animalNames from "src/generated/animalNames";
 
 const USER_ID_KEY = "userId";
-export async function getUserIdOtherwiseCreateNew(): Promise<string> {
+// TODO: Can we return a branded type here?
+export async function getUserIdOtherwiseCreateNew(): Promise<UserId> {
   const db = import.meta.env.DEV
     ? new ImmortalStorage([LocalStorageStore])
     : ImmortalDB;
@@ -13,9 +14,9 @@ export async function getUserIdOtherwiseCreateNew(): Promise<string> {
   if (userId === null) {
     const uuid = short.uuid();
     await db.set(USER_ID_KEY, uuid);
-    return uuid;
+    return uuid.toString() as UserId;
   }
-  return userId;
+  return userId as UserId;
 }
 
 // https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript

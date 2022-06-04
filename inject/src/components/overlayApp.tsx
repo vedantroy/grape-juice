@@ -28,19 +28,16 @@ import TransientHighlighter, {
   TransientHighlighterProps,
 } from "./highlighter/transientHighlighter";
 import { getSelectionUpdate, Selection } from "src/utils/selection";
-import {
-  getColorFromUserId,
-  getUserIdOtherwiseCreateNew,
-} from "src/utils/userId";
+import { getUserIdOtherwiseCreateNew } from "src/utils/userId";
 import HighlightButton, { ButtonStatus } from "./highlightButton";
 import _ from "lodash-es";
 import PermanentHighlighter, {
   PermanentHighlighterProps,
 } from "./highlighter/permanentHighlighter";
 import { HighlightId, PostId, ReplyId, UserId } from "@site/db/types.server";
-import CursorChat from "src/vendor/cursor-chat";
 import { HighlightWithActiveRanges } from "./highlighter/sharedTypes";
 import invariant from "tiny-invariant";
+import CursorChat from "./cursor-chat/react";
 
 // I hate the pattern of stuff something inside a "go" function
 // This is my solution
@@ -95,13 +92,13 @@ const App = () => {
   >({});
 
   const [selection, setSelection] = useState<Selection | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<UserId | null>(null);
 
-  useEffect(() => {
-    if (!userId) return;
-    const color = getColorFromUserId(userId as UserId);
-    new CursorChat(CURSOR_CHAT_URL, color);
-  }, [userId]);
+  // useEffect(() => {
+  //   if (!userId) return;
+  //   const color = getColorFromUserId(userId as UserId);
+  //   new CursorChat(CURSOR_CHAT_URL, color);
+  // }, [userId]);
 
   const handleSelection = useCallback(
     (msg: SelectionMessage) => {
@@ -306,32 +303,42 @@ const App = () => {
   }, [selection, userId]);
 
   return (
-    <div>
-      <ReactShadowRoot>
-        <style type="text/css">{twStyles}</style>
-        {/* <style id="toastify" type="text/css"> {toastStyles}</style> */}
-        {selection ? (
-          <HighlightButton
-            status={
-              !userId
-                ? ButtonStatus.Initializing
-                : highlightStatus === HighlightStatus.Submitting
-                ? ButtonStatus.Submitting
-                : ButtonStatus.Ready
-            }
-            x={selection.x + HIGHLIGHT_BUTTON_OFFSET}
-            y={selection.y}
-            onClick={submitSelection}
+    <>
+      <div>
+        <ReactShadowRoot>
+          <style type="text/css">{twStyles}</style>
+          {/* <style id="toastify" type="text/css"> {toastStyles}</style> */}
+          {selection ? (
+            <HighlightButton
+              status={
+                !userId
+                  ? ButtonStatus.Initializing
+                  : highlightStatus === HighlightStatus.Submitting
+                  ? ButtonStatus.Submitting
+                  : ButtonStatus.Ready
+              }
+              x={selection.x + HIGHLIGHT_BUTTON_OFFSET}
+              y={selection.y}
+              onClick={submitSelection}
+            />
+          ) : null}
+          <PermanentHighlighter
+            postId={CHANNEL as PostId}
+            highlights={permanentHighlights}
           />
-        ) : null}
-        <PermanentHighlighter
-          postId={CHANNEL as PostId}
-          highlights={permanentHighlights}
-        />
-        <TransientHighlighter highlights={transientHighlights} />
-        <ToastContainer pauseOnFocusLoss={false} pauseOnHover={false} />
-      </ReactShadowRoot>
-    </div>
+          <TransientHighlighter highlights={transientHighlights} />
+          <ToastContainer pauseOnFocusLoss={false} pauseOnHover={false} />
+        </ReactShadowRoot>
+      </div>
+      <div>
+        {userId && (
+          <CursorChat
+            userId={userId as UserId}
+            websocketUrl={CURSOR_CHAT_URL}
+          />
+        )}
+      </div>
+    </>
   );
 };
 
