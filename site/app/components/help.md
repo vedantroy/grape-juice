@@ -6,7 +6,7 @@ You want to use this API if you need greater control over the HTML that is uploa
 Normally, when you upload a page by pasting in its URL, we:
 
 - make a GET request from our servers and save the result
-- _coming soon_ we render the page in a headless browser and save the resulting HTML
+- _Coming soon:_ For JS heavy pages, we render the page in a headless browser and save the resulting HTML
 
 This usually works, but there are 2 downsides:
 
