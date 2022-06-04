@@ -3,7 +3,6 @@
 // - Made it work inside of a Shadow DOM (to avoid interfering w/ page styles)
 
 // There's a lot of things I'm *not* doing here -- for example:
-// - There's no shadow DOM, so theoretically the cursors could get messed up // - (The CSS is injected into the head of the document, the horror!)
 // - I'm using y-websocket-server instead of integrating this into my uwebsockets stuff
 // but for a MVP, it's good enough
 // - I bet if I use uwebsockets + no yjs this will be 10x faster / smoother
