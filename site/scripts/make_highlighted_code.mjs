@@ -49,35 +49,36 @@ async function go() {
   });
 
   const lines = code.map(({ name, code }) => {
-    console.log(`Highlighting ${name}...`);
+    console.log(`Highlighting template: ${name}...`);
     console.log(code);
+    console.log("================\n\n");
 
     const params = [{ name: "prewrap", type: "boolean" }];
+
+    function addInterpolations(s) {
+      return s.replace(/\$\$[a-zA-Z]+:[a-zA-Z]+\$\$/g, (param) => {
+        const [paramName, paramType] = param.slice(2, -2).split(":");
+        if (params.find((p) => p.name === paramName) === undefined) {
+          params.push({ name: paramName, type: paramType });
+        }
+        return "${" + paramName + "}";
+      });
+    }
 
     const highlighted = highlighter.codeToHtml(code, {
       lang: "javascript",
     });
 
-    let paramAdded = false;
-    const withInterpolations = highlighted.replace(
-      /\$\$[a-zA-Z]+:[a-zA-Z]+\$\$/g,
-      (param) => {
-        const [paramName, paramType] = param.slice(2, -2).split(":");
-        if (!paramAdded) {
-          paramAdded = true;
-          params.push({ name: paramName, type: paramType });
-        }
-        return "${" + paramName + "}";
-      }
-    );
-    const withInterpolationsPrewrapped = addPrewrap(withInterpolations);
+    const HTML = addInterpolations(highlighted);
+    const PrewrappedHTML = addPrewrap(HTML);
+    const codeWithInterpolations = addInterpolations(code);
 
     const destructureCode = `{ ${params
       .map((param) => param.name)
       .join(", ")} }`;
     const typeCode =
       "{" + params.map(({ name, type }) => `${name}: ${type}`).join("; ") + "}";
-    const generatedCode = `export const ${name} = (${destructureCode}: ${typeCode}) => prewrap ? \`${withInterpolationsPrewrapped}\` : \`${withInterpolations}\`;`;
+    const generatedCode = `export const ${name} = (${destructureCode}: ${typeCode}) => ({ HTML: prewrap ? \`${PrewrappedHTML}\` : \`${HTML}\`, code: \`${codeWithInterpolations}\` });`;
     return generatedCode;
   });
 

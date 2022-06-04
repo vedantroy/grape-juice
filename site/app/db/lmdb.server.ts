@@ -38,14 +38,19 @@ export default class DBImpl implements DB {
   translator: short.Translator;
 
   constructor({ path }: LMDBConfig) {
-    const root = open(path, { sharedStructuresKey: STRUCTURES_KEY });
+    const root = open(path, {
+      sharedStructuresKey: STRUCTURES_KEY,
+      compression: true,
+    });
     this.pages = root.openDB({
       name: "Page",
       sharedStructuresKey: STRUCTURES_KEY,
+      compression: true,
     });
     this.highlights = root.openDB({
       name: "Highlight",
       sharedStructuresKey: STRUCTURES_KEY,
+      compression: true,
     });
     this.Page = {
       makePage: this.#makePage,

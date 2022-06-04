@@ -1,4 +1,4 @@
-export const createAnonPostCode = ({ prewrap, hostUrl }: {prewrap: boolean; hostUrl: string}) => prewrap ? `<pre style="white-space: pre-wrap" class="shiki" style="background-color: #292D3E"><code><span class="line"><span style="color: #A6ACCD">m </span><span style="color: #89DDFF">=</span><span style="color: #A6ACCD"> </span><span style="color: #89DDFF; font-style: italic">await</span><span style="color: #A6ACCD"> </span><span style="color: #89DDFF">import</span><span style="color: #A6ACCD">(</span><span style="color: #89DDFF">&quot;</span><span style="color: #C3E88D">${hostUrl}/utils/utils-BXDNG4XM.js</span><span style="color: #89DDFF">&quot;</span><span style="color: #A6ACCD">)</span><span style="color: #89DDFF">;</span></span>
+export const createAnonPostCode = ({ prewrap, hostUrl }: {prewrap: boolean; hostUrl: string}) => ({ HTML: prewrap ? `<pre style="white-space: pre-wrap" class="shiki" style="background-color: #292D3E"><code><span class="line"><span style="color: #A6ACCD">m </span><span style="color: #89DDFF">=</span><span style="color: #A6ACCD"> </span><span style="color: #89DDFF; font-style: italic">await</span><span style="color: #A6ACCD"> </span><span style="color: #89DDFF">import</span><span style="color: #A6ACCD">(</span><span style="color: #89DDFF">&quot;</span><span style="color: #C3E88D">${hostUrl}/utils/utils-BXDNG4XM.js</span><span style="color: #89DDFF">&quot;</span><span style="color: #A6ACCD">)</span><span style="color: #89DDFF">;</span></span>
 <span class="line"><span style="color: #676E95; font-style: italic">// If your site has CSS in JS, use this</span></span>
 <span class="line"><span style="color: #A6ACCD">m</span><span style="color: #89DDFF">.</span><span style="color: #82AAFF">serializeCSSInJSStyles</span><span style="color: #A6ACCD">(document)</span><span style="color: #89DDFF">;</span></span>
 <span class="line"><span style="color: #A6ACCD">response </span><span style="color: #89DDFF">=</span><span style="color: #A6ACCD"> </span><span style="color: #89DDFF; font-style: italic">await</span><span style="color: #A6ACCD"> </span><span style="color: #82AAFF">fetch</span><span style="color: #A6ACCD">(</span><span style="color: #89DDFF">&quot;</span><span style="color: #C3E88D">${hostUrl}/api/upload</span><span style="color: #89DDFF">&quot;</span><span style="color: #89DDFF">,</span><span style="color: #A6ACCD"> </span><span style="color: #89DDFF">{</span></span>
@@ -26,4 +26,18 @@ export const createAnonPostCode = ({ prewrap, hostUrl }: {prewrap: boolean; host
 <span class="line"><span style="color: #A6ACCD">       </span><span style="color: #F07178">url</span><span style="color: #89DDFF">:</span><span style="color: #A6ACCD"> window</span><span style="color: #89DDFF">.</span><span style="color: #A6ACCD">location</span><span style="color: #89DDFF">.</span><span style="color: #A6ACCD">href</span><span style="color: #89DDFF">,</span></span>
 <span class="line"><span style="color: #A6ACCD">  </span><span style="color: #89DDFF">}</span><span style="color: #A6ACCD">)</span></span>
 <span class="line"><span style="color: #89DDFF">}</span><span style="color: #A6ACCD">)</span><span style="color: #89DDFF">;</span></span>
-<span class="line"><span style="color: #89DDFF; font-style: italic">await</span><span style="color: #A6ACCD"> response</span><span style="color: #89DDFF">.</span><span style="color: #82AAFF">json</span><span style="color: #A6ACCD">()</span><span style="color: #89DDFF">;</span></span></code></pre>`;
+<span class="line"><span style="color: #89DDFF; font-style: italic">await</span><span style="color: #A6ACCD"> response</span><span style="color: #89DDFF">.</span><span style="color: #82AAFF">json</span><span style="color: #A6ACCD">()</span><span style="color: #89DDFF">;</span></span></code></pre>`, code: `m = await import("${hostUrl}/utils/utils-BXDNG4XM.js");
+// If your site has CSS in JS, use this
+m.serializeCSSInJSStyles(document);
+response = await fetch("${hostUrl}/api/upload", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+       html: document.documentElement.outerHTML,
+       // You can change this to your own post title
+       title: document.title,
+       // query parameters/URL fragments are ignored
+       url: window.location.href,
+  })
+});
+await response.json();` });

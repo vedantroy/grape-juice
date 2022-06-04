@@ -27,7 +27,7 @@ It
 ### Caveats
 
 Sometimes the snippet fails because a page has a CSP policy which prevents POSTing to arbitrary URLs.
-In those cases, you should save page's HTML to your computer and then use `curl` / your tool of choice to upload to our API.
+In those cases, you should save the page's HTML to your computer and then use `curl` / your tool of choice to upload to our API.
 
 ## Edge Cases
 
