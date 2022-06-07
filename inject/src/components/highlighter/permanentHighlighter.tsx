@@ -91,6 +91,9 @@ export default function PermanentHighlighter({
   const [activeHighlightId, setActiveHighlightId] =
     useState<HighlightId | null>(null);
 
+  const [hoveredHighlightId, setHoveredHighlightId] =
+    useState<HighlightId | null>(null);
+
   const getIntersectingId = useCallback(
     (e: MouseEvent): HighlightId | null => {
       if (_.isEmpty(highlights)) return null;
@@ -120,7 +123,18 @@ export default function PermanentHighlighter({
   useEffect(() => {
     function onMouseMove(e: MouseEvent) {
       const id = getIntersectingId(e);
+      // This doesn't always work b/c
+      // the underlying element may have
+      // a custom cursor style.
+      // There's nothing we can do in that scenario
+      // The code that tries to use !important still doesn't work
       document.body.style.cursor = id === null ? "auto" : "pointer";
+      // document.body.style.setProperty(
+      //   "cursor",
+      //   id !== null ? "pointer" : "auto",
+      //   id !== null ? "important" : undefined
+      // );
+      setHoveredHighlightId(id);
     }
 
     function onClick(e: MouseEvent) {
@@ -154,7 +168,13 @@ export default function PermanentHighlighter({
             key={id}
             color={getColorFromUserId(userId)}
             rects={rects}
-            opacity={id === activeHighlightId ? "high" : "medium"}
+            opacity={
+              id === activeHighlightId
+                ? "high"
+                : id === hoveredHighlightId
+                ? "medium"
+                : "low"
+            }
           />
         ))}
       </Container>

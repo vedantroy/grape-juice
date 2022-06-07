@@ -1,4 +1,5 @@
 import { json, LoaderFunction } from "@remix-run/node";
+import { useLoaderData } from "@remix-run/react";
 import DB from "~/db/index.server";
 import { notFound } from "remix-utils";
 import { getParam } from "~/helpers/params";
@@ -24,13 +25,20 @@ export const loader: LoaderFunction = async ({ params }) => {
     postId,
   });
 
-  return new Response(withOverlay, {
-    headers: {
-      "Content-Type": "text/html",
-    },
-  });
+  return json({ html: withOverlay });
+
+  // We can't just return HTML directly because
+  // then `redirect` does not work
+  // See: https://github.com/remix-run/remix/discussions/3405
+
+  //return new Response(withOverlay, {
+  //  headers: {
+  //    "Content-Type": "text/html",
+  //  },
+  //});
 };
 
-//export default function () {
-//  return <div>uh oh!</div>;
-//}
+export default function () {
+  const { html } = useLoaderData<any>();
+  return <iframe className="w-screen h-screen" srcDoc={html}></iframe>;
+}
