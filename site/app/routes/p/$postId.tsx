@@ -7,7 +7,7 @@ import rewriter from "~/services/HTMLRewriter";
 import { SCRIPT_SRC } from "~/generated/injected_sources";
 import { CURSOR_CHAT_URL, WEBSOCKET_URL } from "~/services/env";
 
-export const loader: LoaderFunction = async ({ request, params }) => {
+export const loader: LoaderFunction = async ({ params }) => {
   const postId = getParam(params, "postId") as PostId;
 
   const page = await DB.Page.getPageWithHighlightsAndReplies(postId);
@@ -30,3 +30,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     },
   });
 };
+
+//export default function () {
+//  return <div>uh oh!</div>;
+//}

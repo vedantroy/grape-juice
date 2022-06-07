@@ -18,8 +18,13 @@ function injectIntoHead(html: string, toInject: string[]): string {
 //} else return newHtml;
 
 export const regexRewriter: Rewriter = {
+  getTitle(html: string): string | null {
+    const matchGroup = /<title.*?>(.*)<\/title>/.exec(html);
+    return matchGroup ? matchGroup[1] : null;
+  },
   // TODO: This breaks on srcset attributes in `img` tags
   // (e.g on lobste.rs, the user icons don't show up)
+  // TODO: Need to figure out how to bypass X-Frame-Options
   makeLinksAbsolute(html, { originUrl }) {
     const url = new URL(originUrl);
     const { origin, pathname } = url;

@@ -1,5 +1,16 @@
-import { ActionFunction, json, LoaderFunction } from "@remix-run/node";
-import { Link, useFetcher, useLoaderData } from "@remix-run/react";
+import {
+  ActionFunction,
+  json,
+  LoaderFunction,
+  redirect,
+} from "@remix-run/node";
+import {
+  Form,
+  Link,
+  useFetcher,
+  useLoaderData,
+  useTransition,
+} from "@remix-run/react";
 import {
   MdContentCopy,
   MdOutlineHelpOutline,
@@ -21,6 +32,8 @@ import tw from "~/components/tw-styled";
 import { Col, Row } from "~/components/layout";
 import { PreviewResponse } from "./api/preview";
 import Spinner from "~/components/spinner";
+import DB from "~/db/index.server";
+import rewriter from "~/services/HTMLRewriter";
 
 export function links() {
   return [{ rel: "stylesheet", href: styles }];
@@ -40,9 +53,20 @@ export const loader: LoaderFunction = async ({ request }) => {
   return json({ code, higlightedCode: HTML } as API);
 };
 
+const POST_HTML = "html";
+const POST_URL = "url";
+
 export const action: ActionFunction = async ({ request }) => {
-  const json = await request.json();
-  const { type } = json;
+  const { [POST_HTML]: html, [POST_URL]: url } = Object.fromEntries(
+    await request.formData()
+  );
+  const postId = await DB.Page.makePage({
+    html: html as string,
+    url: url as string,
+    title: rewriter.getTitle(html as string) || "No Title",
+  });
+
+  return redirect(`/p/${postId}`);
 };
 
 const Card = tw.div(
@@ -117,6 +141,9 @@ const DevToolsRow = ({ code, url }: { code: string; url: URL | null }) => (
 export default function () {
   const { code } = useLoaderData<API>();
 
+  const transition = useTransition();
+  const submitting = transition.state === "submitting";
+
   const [urlText, setUrlText] = useState("");
   const url = useMemo(() => getURL(prefixWithHttps(urlText)), [urlText]);
   const [debouncedUrl] = useDebounce(url, 250);
@@ -127,6 +154,18 @@ export default function () {
     if (url === null || !fetcher) return;
     fetcher.load(`/api/preview?url=${encodeURIComponent(url.toString())}`);
   }, [debouncedUrl]);
+
+  // TODO: More elegant way to do this?
+  // (this kind of repetitive & the UI might be out of sync ??)
+  const submitHTML =
+    urlText !== "" &&
+    fetcher.state === "idle" &&
+    fetcher.data &&
+    "html" in fetcher.data
+      ? fetcher.data.html
+      : null;
+
+  const disableSubmit = submitting || !submitHTML;
 
   return (
     <>
@@ -145,7 +184,7 @@ export default function () {
         <Card
           style={{
             // Can't set top border using tailwind
-            borderTop: clsx("2px solid", TW_EMERALD_400),
+            borderTop: clsx("2px solid", TW_EMERALD_500),
           }}
         >
           <input
@@ -194,6 +233,20 @@ export default function () {
             ) : // TODO: Not sure what this case is
             null}
           </div>
+          <Form method="post">
+            <input type="hidden" name={POST_HTML} value={submitHTML!!}></input>
+            <input type="hidden" name={POST_URL} value={urlText}></input>
+            <button
+              disabled={disableSubmit}
+              type="submit"
+              className={clsx(
+                "bg-emerald-500 w-full mt-8 text-white font-semibold text-lg py-2 rounded",
+                disableSubmit && "cursor-not-allowed bg-emerald-300"
+              )}
+            >
+              Submit
+            </button>
+          </Form>
         </Card>
       </Col>
     </>
