@@ -13,10 +13,6 @@ function injectIntoHead(html: string, toInject: string[]): string {
   return beforeHead + afterHead;
 }
 
-//if (openInParent) {
-//  return injectIntoHead(newHtml, ['<base target="_blank"/>']);
-//} else return newHtml;
-
 export const regexRewriter: Rewriter = {
   getTitle(html: string): string | null {
     const matchGroup = /<title.*?>(.*)<\/title>/.exec(html);
@@ -44,6 +40,8 @@ export const regexRewriter: Rewriter = {
     	</script>
     `,
       `<script type="module" src="${scriptSrc}"></script>`,
+      // We want links to open a new tab, the UX is less confusing
+      `<base target="_blank"/>`,
     ]);
   },
 };
