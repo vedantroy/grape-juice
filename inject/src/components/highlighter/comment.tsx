@@ -224,7 +224,7 @@ export default function ({
             value={text}
             style={{ resize: "none" }}
             placeholder="Reply here..."
-            className="rounded border-gray-300 border-2 w-full"
+            className="rounded text-base border-gray-300 border-2 w-full"
           />
           <div className="mt-4">
             {!submitting && (
