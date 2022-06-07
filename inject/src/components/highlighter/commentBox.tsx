@@ -12,6 +12,7 @@ type CommentBoxProps = {
   commentClicked: (highlightId: HighlightId | null) => void;
   activeHighlightId: HighlightId | null;
   postId: PostId;
+  userId: UserId;
 };
 
 const COMMENT_BOX_OFFSET = 20;
@@ -119,6 +120,7 @@ export default function ({
   commentClicked,
   activeHighlightId,
   postId,
+  userId,
 }: CommentBoxProps) {
   invariant(highlights.length > 0, "no highlights");
 
@@ -191,7 +193,7 @@ export default function ({
           postId={postId}
           onHighlightId={commentClicked}
           onHideReplyBox={() => setReplyBoxHiddenHighlightId(h.id)}
-          userId={h.userId}
+          userId={userId}
           onHeightChanged={(newHeight) =>
             setIdToHeight((old) => ({ ...old, [h.id]: newHeight }))
           }

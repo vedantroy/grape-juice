@@ -322,10 +322,13 @@ const App = () => {
               onClick={submitSelection}
             />
           ) : null}
-          <PermanentHighlighter
-            postId={CHANNEL as PostId}
-            highlights={permanentHighlights}
-          />
+          {userId && (
+            <PermanentHighlighter
+              userId={userId}
+              postId={CHANNEL as PostId}
+              highlights={permanentHighlights}
+            />
+          )}
           <TransientHighlighter highlights={transientHighlights} />
           <ToastContainer pauseOnFocusLoss={false} pauseOnHover={false} />
         </ReactShadowRoot>

@@ -2,7 +2,7 @@ import * as _ from "lodash-es";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Container } from "./container";
 import { Highlight } from "./highlight";
-import type { HighlightId, PostId } from "@site/db/types.server";
+import type { HighlightId, PostId, UserId } from "@site/db/types.server";
 import { getColorFromUserId } from "src/utils/userId";
 import invariant from "tiny-invariant";
 import {
@@ -18,6 +18,7 @@ import Flatbush from "flatbush";
 export type PermanentHighlighterProps = {
   highlights: Record<HighlightId, HighlightWithActiveRanges>;
   postId: PostId;
+  userId: UserId;
 };
 
 // TODO: In the future we could have a backup strategy involving ranges
@@ -36,6 +37,7 @@ type RectIdxToHighlightAreaAndId = Array<{
 export default function PermanentHighlighter({
   highlights,
   postId,
+  userId,
 }: PermanentHighlighterProps) {
   const { width, height } = useWindowDimensions();
 
@@ -158,6 +160,7 @@ export default function PermanentHighlighter({
     <>
       <CommentBox
         postId={postId}
+        userId={userId}
         activeHighlightId={activeHighlightId}
         commentClicked={(id) => setActiveHighlightId(id)}
         highlights={deserializedHighlights}
