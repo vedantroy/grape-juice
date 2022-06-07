@@ -107,8 +107,6 @@ export default function ({
   postId,
 }: CommentProps) {
   const { ref, height = DEFAULT_HEIGHT } = useResizeObserver<HTMLDivElement>();
-  console.log(replies);
-  console.log("REPLY USERI ID:" + userId);
 
   useEffect(() => {
     if (height === DEFAULT_HEIGHT) return;
