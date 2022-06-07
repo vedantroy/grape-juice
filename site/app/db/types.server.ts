@@ -35,6 +35,7 @@ type MaybePromise<T> = T | Promise<T>;
 export interface DB {
   Page: {
     slugToPageId(slug: string): PostId;
+    getPages(): MaybePromise<Array<{ url: string; title: string; date: Date }>>;
     makePage(args: Pick<Page, "html" | "url" | "title">): MaybePromise<PostId>;
     // Used by Remix for initial page load (embed highlights in)
     getPageWithHighlightsAndReplies(id: PostId): MaybePromise<Page | null>;

@@ -53,6 +53,7 @@ export default class DBImpl implements DB {
       compression: true,
     });
     this.Page = {
+      getPages: this.#getPages,
       makePage: this.#makePage,
       makeHighlight: this.#makeHighlight,
       getPageWithHighlightsAndReplies: this.#getPageWithHighlightsAndReplies,
@@ -63,6 +64,23 @@ export default class DBImpl implements DB {
     };
     this.translator = short();
   }
+
+  #getPages: DB["Page"]["getPages"] = async () => {
+    // TODO: https://github.com/kriszyp/lmdb-js/discussions/180
+    const pages: Array<{ key: string; value: RawPage }> = [];
+    this.pages.getRange({ end: MAXIMUM_KEY }).forEach((p) => pages.push(p));
+
+    const mostRecentFirst = pages.sort(
+      ({ value }, { value: value2 }) =>
+        value.date.getUTCSeconds() - value2.date.getUTCSeconds()
+    );
+
+    return mostRecentFirst.map(({ value }) => ({
+      date: value.date,
+      url: value.url,
+      title: value.title,
+    }));
+  };
 
   #makePage: DB["Page"]["makePage"] = async ({ html, url, title }) => {
     const postId = short.generate();
