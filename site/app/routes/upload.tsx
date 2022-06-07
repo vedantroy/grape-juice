@@ -218,7 +218,9 @@ export default function () {
                   <Col className="w-full items-center">
                     <MdErrorOutline size={36} className="mr-2" />
                     {fetcher.data.error.split("\n").map((line) => (
-                      <div className="text-center">{line}</div>
+                      <div key={line} className="text-center">
+                        {line}
+                      </div>
                     ))}
                   </Col>
                 </Center>
@@ -234,7 +236,11 @@ export default function () {
             null}
           </div>
           <Form method="post">
-            <input type="hidden" name={POST_HTML} value={submitHTML!!}></input>
+            <input
+              type="hidden"
+              name={POST_HTML}
+              value={submitHTML || ""}
+            ></input>
             <input type="hidden" name={POST_URL} value={urlText}></input>
             <button
               disabled={disableSubmit}
