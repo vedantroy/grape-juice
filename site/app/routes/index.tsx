@@ -102,13 +102,13 @@ const PostCard = ({
     <Link to={`/p/${id}`}>
       <div
         className={clsx(
-          "h-36 bg-rose-500 rounded-t-lg flex flex-col justify-center items-center",
+          "h-36 rounded-t-lg flex flex-col justify-center items-center",
           //@ts-expect-error - Typescript doesn't know the result is always an uppercase letter
-          COLORS[title.charAt(0).toUpperCase()]
+          COLORS[title.trim().charAt(0).toUpperCase()]
         )}
       >
         <div className="text-8xl text-white font-bold">
-          {title.charAt(0).toUpperCase()}
+          {title.trim().charAt(0).toUpperCase()}
         </div>
       </div>
     </Link>
@@ -140,11 +140,17 @@ export default function Index() {
             Socratic
           </div>
           <Col className="mt-2 md:mt-5 md:gap-1">
-            <Subtitle>The annotation layer for the web</Subtitle>
-            <Subtitle>Discuss any page in real time</Subtitle>
+            <Subtitle>
+              The <span className="text-cyan-300">annotation</span> layer for
+              the web
+            </Subtitle>
+            <Subtitle>
+              Discuss any page
+              <span className="text-cyan-300"> in real time</span>
+            </Subtitle>
             <Link
               to="/upload"
-              className="flex flex-col items-center justify-center bg-emerald-500 text-center font-semibold text-white w-fit mt-4 text-base px-8 py-1 rounded md:text-lg md:rounded-lg md:px-16 md:py-2"
+              className="flex flex-col items-center justify-center bg-cyan-500 text-center font-semibold text-white w-fit mt-4 text-base px-8 py-1 rounded md:text-lg md:rounded-lg md:px-16 md:py-2"
             >
               Start
             </Link>
