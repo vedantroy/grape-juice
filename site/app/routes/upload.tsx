@@ -16,7 +16,6 @@ import {
   MdOutlineHelpOutline,
   MdErrorOutline,
 } from "react-icons/md";
-import { FaSadTear } from "react-icons/fa";
 import clsx from "clsx";
 import copy from "copy-to-clipboard";
 import { HOST_URL } from "~/services/env";
@@ -241,7 +240,11 @@ export default function () {
               name={POST_HTML}
               value={submitHTML || ""}
             ></input>
-            <input type="hidden" name={POST_URL} value={urlText}></input>
+            <input
+              type="hidden"
+              name={POST_URL}
+              value={prefixWithHttps(urlText)}
+            ></input>
             <button
               disabled={disableSubmit}
               type="submit"

@@ -1,11 +1,14 @@
 import { Link, useLoaderData } from "@remix-run/react";
-import { Col, Row } from "~/components/layout";
-import tw from "~/components/tw-styled";
 import { FiExternalLink } from "react-icons/fi";
 import { LoaderFunction, json } from "@remix-run/node";
+import { parseISO, format } from "date-fns";
 import DB from "~/db/index.server";
+import { Col, Row } from "~/components/layout";
+import tw from "~/components/tw-styled";
+import clsx from "clsx";
 
 type Pages = Array<{
+  key: string;
   url: string;
   title: string;
   date: string;
@@ -13,7 +16,12 @@ type Pages = Array<{
 
 export const loader: LoaderFunction = async () => {
   const pages = await DB.Page.getPages();
-  return json<Pages>(pages.map((p) => ({ ...p, date: p.date.toISOString() })));
+  const mostRecentFirst = pages.sort(
+    (a, b) => a.date.getUTCSeconds() - b.date.getUTCSeconds()
+  );
+  return json<Pages>(
+    mostRecentFirst.map((p) => ({ ...p, date: p.date.toISOString() }))
+  );
 };
 
 const Subtitle = tw.div(
@@ -47,26 +55,75 @@ const UseCaseLink = ({
 // w-40
 const WIDTH_POST_CARD = "10rem";
 
-const PostCard = () => (
+const COLORS = {
+  A: "bg-rose-500",
+  B: "bg-rose-700",
+  C: "bg-orange-500",
+  D: "bg-orange-700",
+  E: "bg-amber-500",
+  F: "bg-amber-700",
+  G: "bg-yellow-500",
+  H: "bg-yellow-700",
+  I: "bg-lime-500",
+  J: "bg-lime-700",
+  K: "bg-green-500",
+  L: "bg-green-700",
+  M: "bg-emerald-500",
+  N: "bg-emerald-700",
+  O: "bg-teal-500",
+  P: "bg-teal-700",
+  Q: "bg-cyan-500",
+  R: "bg-cyan-700",
+  S: "bg-sky-500",
+  T: "bg-sky-700",
+  U: "bg-blue-500",
+  V: "bg-blue-700",
+  W: "bg-indigo-500",
+  X: "bg-indigo-700",
+  Y: "bg-violet-500",
+  Z: "bg-violet-700",
+};
+
+const PostCard = ({
+  title,
+  url,
+  date,
+  id,
+}: {
+  title: string;
+  url: string;
+  id: string;
+  date: string;
+}) => (
   <div
     className="h-52 flex flex-col rounded-lg shadow shadow-gray-800"
     style={{ width: WIDTH_POST_CARD }}
   >
-    <div className="h-36 bg-rose-500 rounded-t-lg flex flex-col justify-center items-center">
-      <div className="text-8xl text-white font-bold">H</div>
-    </div>
+    <Link to={`/p/${id}`}>
+      <div
+        className={clsx(
+          "h-36 bg-rose-500 rounded-t-lg flex flex-col justify-center items-center",
+          //@ts-expect-error
+          COLORS[title.charAt(0).toUpperCase()]
+        )}
+      >
+        <div className="text-8xl text-white font-bold">
+          {title.charAt(0).toUpperCase()}
+        </div>
+      </div>
+    </Link>
     <div className="px-2 pt-1 flex flex-col justify-center flex-1 rounded-b-lg bg-gray-500">
       {/* TODO: Check if this is going to be confusing UX */}
       <Row className="items-center">
         <div className="pr-2 text-white text-ellipsis whitespace-nowrap overflow-hidden font-semibold">
-          Hacker News
+          {title}
         </div>
-        <a href="https://news.ycombinator.com" target="_blank">
+        <a href={url} target="_blank">
           <FiExternalLink color="white" className="opacity-75" size={16} />
         </a>
       </Row>
       <div className="text-xs font-semibold text-white opacity-75">
-        May 1st, 2020
+        {format(parseISO(date), "MMM d, yyyy")}
       </div>
     </div>
   </div>
@@ -74,8 +131,6 @@ const PostCard = () => (
 
 export default function Index() {
   const data = useLoaderData<Pages>();
-  console.log("DATA");
-  console.log(data);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -111,13 +166,18 @@ export default function Index() {
         </div>
         <div
           className="px-8 md:px-16 gap-8 flex flex-col items-center md:grid"
-          // 10rem =
           style={{
             gridTemplateColumns: `repeat(auto-fill, ${WIDTH_POST_CARD})`,
           }}
         >
           {data.map((p) => (
-            <PostCard />
+            <PostCard
+              date={p.date}
+              id={p.key}
+              key={p.key}
+              url={p.url}
+              title={p.title}
+            />
           ))}
         </div>
       </div>

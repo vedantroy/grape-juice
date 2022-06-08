@@ -66,16 +66,14 @@ export default class DBImpl implements DB {
   }
 
   #getPages: DB["Page"]["getPages"] = async () => {
-    // TODO: https://github.com/kriszyp/lmdb-js/discussions/180
-    const pages: Array<{ key: string; value: RawPage }> = [];
-    this.pages.getRange({ end: MAXIMUM_KEY }).forEach((p) => pages.push(p));
+    const pages = this.pages
+      .getRange({ end: MAXIMUM_KEY })
+      // TODO:
+      // @ts-expect-error https://github.com/kriszyp/lmdb-js/issues/181
+      .asArray.filter((entry) => entry.key !== STRUCTURES_KEY);
 
-    const mostRecentFirst = pages.sort(
-      ({ value }, { value: value2 }) =>
-        value.date.getUTCSeconds() - value2.date.getUTCSeconds()
-    );
-
-    return mostRecentFirst.map(({ value }) => ({
+    return pages.map(({ value, key }) => ({
+      key,
       date: value.date,
       url: value.url,
       title: value.title,
@@ -104,6 +102,7 @@ export default class DBImpl implements DB {
       type WithId = RawHighlight & { id: HighlightId };
       const highlights = _.fromPairs<WithId>([
         ...this.highlights
+          // TODO: Check if we run into the structures bug here
           .getRange({ start: postId, end: [postId, MAXIMUM_KEY] })
           .map<[HighlightId, WithId]>(({ value, key }) => [
             key[1] as HighlightId,
