@@ -103,7 +103,7 @@ const PostCard = ({
       <div
         className={clsx(
           "h-36 bg-rose-500 rounded-t-lg flex flex-col justify-center items-center",
-          //@ts-expect-error
+          //@ts-expect-error - Typescript doesn't know the result is always an uppercase letter
           COLORS[title.charAt(0).toUpperCase()]
         )}
       >
