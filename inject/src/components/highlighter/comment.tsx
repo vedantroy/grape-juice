@@ -205,8 +205,9 @@ export default function ({
               {formatDistanceToNowStrict(r.date, {
                 addSuffix: true,
               })
-                .replace("minutes", "mins")
-                .replace("seconds", "secs")}
+                .replace("minute", "min")
+                .replace("second", "sec")
+                .replace("hour", "hr")}
             </div>
           </HeaderRow>
           <p className="mt-2 px-4 pb-4 break-words">{r.text}</p>
