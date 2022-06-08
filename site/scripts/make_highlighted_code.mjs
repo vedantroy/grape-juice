@@ -25,6 +25,8 @@ const code = [
            html: document.documentElement.outerHTML,
            // You can change this to your own post title
            title: document.title,
+           // All relative URLs will be resolved to absolute URLs
+           // using the base URL of this URL
            // query parameters/URL fragments are ignored
            url: window.location.href,
       })

@@ -8,6 +8,8 @@ export const createAnonPostCode = ({ prewrap, hostUrl }: {prewrap: boolean; host
 <span class="line"><span style="color: #A6ACCD">       </span><span style="color: #F07178">html</span><span style="color: #89DDFF">:</span><span style="color: #A6ACCD"> document</span><span style="color: #89DDFF">.</span><span style="color: #A6ACCD">documentElement</span><span style="color: #89DDFF">.</span><span style="color: #A6ACCD">outerHTML</span><span style="color: #89DDFF">,</span></span>
 <span class="line"><span style="color: #89DDFF">       </span><span style="color: #676E95; font-style: italic">// You can change this to your own post title</span></span>
 <span class="line"><span style="color: #A6ACCD">       </span><span style="color: #F07178">title</span><span style="color: #89DDFF">:</span><span style="color: #A6ACCD"> document</span><span style="color: #89DDFF">.</span><span style="color: #A6ACCD">title</span><span style="color: #89DDFF">,</span></span>
+<span class="line"><span style="color: #89DDFF">       </span><span style="color: #676E95; font-style: italic">// All relative URLs will be resolved to absolute URLs</span></span>
+<span class="line"><span style="color: #89DDFF">       </span><span style="color: #676E95; font-style: italic">// using the base URL of this URL</span></span>
 <span class="line"><span style="color: #89DDFF">       </span><span style="color: #676E95; font-style: italic">// query parameters/URL fragments are ignored</span></span>
 <span class="line"><span style="color: #A6ACCD">       </span><span style="color: #F07178">url</span><span style="color: #89DDFF">:</span><span style="color: #A6ACCD"> window</span><span style="color: #89DDFF">.</span><span style="color: #A6ACCD">location</span><span style="color: #89DDFF">.</span><span style="color: #A6ACCD">href</span><span style="color: #89DDFF">,</span></span>
 <span class="line"><span style="color: #A6ACCD">  </span><span style="color: #89DDFF">}</span><span style="color: #A6ACCD">)</span></span>
@@ -22,6 +24,8 @@ export const createAnonPostCode = ({ prewrap, hostUrl }: {prewrap: boolean; host
 <span class="line"><span style="color: #A6ACCD">       </span><span style="color: #F07178">html</span><span style="color: #89DDFF">:</span><span style="color: #A6ACCD"> document</span><span style="color: #89DDFF">.</span><span style="color: #A6ACCD">documentElement</span><span style="color: #89DDFF">.</span><span style="color: #A6ACCD">outerHTML</span><span style="color: #89DDFF">,</span></span>
 <span class="line"><span style="color: #89DDFF">       </span><span style="color: #676E95; font-style: italic">// You can change this to your own post title</span></span>
 <span class="line"><span style="color: #A6ACCD">       </span><span style="color: #F07178">title</span><span style="color: #89DDFF">:</span><span style="color: #A6ACCD"> document</span><span style="color: #89DDFF">.</span><span style="color: #A6ACCD">title</span><span style="color: #89DDFF">,</span></span>
+<span class="line"><span style="color: #89DDFF">       </span><span style="color: #676E95; font-style: italic">// All relative URLs will be resolved to absolute URLs</span></span>
+<span class="line"><span style="color: #89DDFF">       </span><span style="color: #676E95; font-style: italic">// using the base URL of this URL</span></span>
 <span class="line"><span style="color: #89DDFF">       </span><span style="color: #676E95; font-style: italic">// query parameters/URL fragments are ignored</span></span>
 <span class="line"><span style="color: #A6ACCD">       </span><span style="color: #F07178">url</span><span style="color: #89DDFF">:</span><span style="color: #A6ACCD"> window</span><span style="color: #89DDFF">.</span><span style="color: #A6ACCD">location</span><span style="color: #89DDFF">.</span><span style="color: #A6ACCD">href</span><span style="color: #89DDFF">,</span></span>
 <span class="line"><span style="color: #A6ACCD">  </span><span style="color: #89DDFF">}</span><span style="color: #A6ACCD">)</span></span>
@@ -36,6 +40,8 @@ response = await fetch("${hostUrl}/api/upload", {
        html: document.documentElement.outerHTML,
        // You can change this to your own post title
        title: document.title,
+       // All relative URLs will be resolved to absolute URLs
+       // using the base URL of this URL
        // query parameters/URL fragments are ignored
        url: window.location.href,
   })
