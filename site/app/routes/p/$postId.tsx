@@ -6,7 +6,7 @@ import { getParam } from "~/helpers/params";
 import { PostId } from "~/db/types.server";
 import rewriter from "~/services/HTMLRewriter";
 import { SCRIPT_SRC } from "~/generated/injected_sources";
-import { CURSOR_CHAT_URL, WEBSOCKET_URL } from "~/services/env";
+import { CURSOR_CHAT_URL, HOST_URL, WEBSOCKET_URL } from "~/services/env";
 
 export const loader: LoaderFunction = async ({ params }) => {
   const postId = getParam(params, "postId") as PostId;
@@ -23,6 +23,7 @@ export const loader: LoaderFunction = async ({ params }) => {
     cursorChatUrl: CURSOR_CHAT_URL,
     websocketRootUrl: WEBSOCKET_URL,
     postId,
+    hostUrl: HOST_URL,
   });
 
   return json({ html: withOverlay });

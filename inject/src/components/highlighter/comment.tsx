@@ -11,6 +11,7 @@ import {
   UpdateHighlightRepliesMessage,
 } from "@site/websocket/protocol";
 import { unpack } from "msgpackr";
+import { HOST_URL } from "../env";
 
 type CommentProps = {
   x: number;
@@ -154,16 +155,13 @@ export default function ({
 
           let response: Response;
           try {
-            response = await fetch(
-              "http://localhost:3000/api/highlight/reply",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify(data),
-              }
-            );
+            response = await fetch(`${HOST_URL}/api/highlight/reply`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
+            });
           } catch (e) {
             console.log(e);
             return;

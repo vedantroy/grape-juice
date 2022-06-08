@@ -10,6 +10,7 @@ export interface Rewriter {
       scriptSrc: string;
       cursorChatUrl: string;
       websocketRootUrl: string;
+      hostUrl: string;
       postId: PostId;
     }
   ): string;

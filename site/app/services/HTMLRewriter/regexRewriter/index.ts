@@ -13,6 +13,13 @@ function injectIntoHead(html: string, toInject: string[]): string {
   return beforeHead + afterHead;
 }
 
+function trimQuotes(str: string): string {
+  if (str[0] === '"' && str[str.length - 1] === '"') {
+    return str.slice(1, -1);
+  }
+  return str;
+}
+
 export const regexRewriter: Rewriter = {
   getTitle(html: string): string | null {
     const matchGroup = /<title.*?>(.*)<\/title>/.exec(html);
@@ -28,15 +35,19 @@ export const regexRewriter: Rewriter = {
     const newHtml = convertAllRelativeToAbsoluteUrls(html, baseUrl);
     return newHtml;
   },
-  injectOverlay(html, { scriptSrc, cursorChatUrl, websocketRootUrl, postId }) {
+  injectOverlay(
+    html,
+    { scriptSrc, cursorChatUrl, websocketRootUrl, postId, hostUrl }
+  ) {
     return injectIntoHead(html, [
       oneLine`
     	<script>
     	  window.__INJECTED_POST_ID = "${postId}";
-    	  window.__INJECTED_WEBSOCKET_CHANNEL_URL = "${websocketRootUrl}${getPostChannel(
-        postId
-      )}";
-    	  window.__INJECTED_CURSOR_CHAT_URL = "${cursorChatUrl}";
+    	  window.__INJECTED_WEBSOCKET_CHANNEL_URL = "${trimQuotes(
+          websocketRootUrl
+        )}${getPostChannel(postId)}";
+    	  window.__INJECTED_CURSOR_CHAT_URL = "${trimQuotes(cursorChatUrl)}";
+        window.__INJECTED_HOST_URL = "${trimQuotes(hostUrl)}";
     	</script>
     `,
       `<script type="module" src="${scriptSrc}"></script>`,

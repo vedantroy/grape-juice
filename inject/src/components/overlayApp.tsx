@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import ReactShadowRoot from "react-shadow-root";
-import { ToastContainer, toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import { pack, unpack } from "msgpackr";
 import { finder } from "@medv/finder";
@@ -38,6 +38,7 @@ import { HighlightId, PostId, ReplyId, UserId } from "@site/db/types.server";
 import { HighlightWithActiveRanges } from "./highlighter/sharedTypes";
 import invariant from "tiny-invariant";
 import CursorChat from "./cursor-chat/react";
+import { WEBSOCKET_URL, CHANNEL, CURSOR_CHAT_URL } from "./env";
 
 // I hate the pattern of stuff something inside a "go" function
 // This is my solution
@@ -49,24 +50,6 @@ function runAsync(f: Function) {
 
 const HIGHLIGHT_BUTTON_OFFSET = 50;
 const rangee = new Rangee({ document });
-
-declare global {
-  var __INJECTED_POST_ID: PostId;
-  var __INJECTED_WEBSOCKET_CHANNEL_URL: string;
-  var __INJECTED_CURSOR_CHAT_URL: string;
-}
-
-const CHANNEL = import.meta.env.DEV ? "test" : window.__INJECTED_POST_ID;
-const WEBSOCKET_URL = import.meta.env.DEV
-  ? "ws://localhost:9001/test"
-  : window.__INJECTED_WEBSOCKET_CHANNEL_URL;
-const CURSOR_CHAT_URL = import.meta.env.DEV
-  ? "ws://localhost:9002"
-  : window.__INJECTED_CURSOR_CHAT_URL;
-
-invariant(CHANNEL, "CHANNEL is not defined");
-invariant(WEBSOCKET_URL, "WEBSOCKET_URL is not defined");
-invariant(CURSOR_CHAT_URL, "CURSOR_CHAT_URL is not defined");
 
 const HighlightStatus = {
   Ready: "ready",
