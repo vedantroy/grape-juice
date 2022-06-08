@@ -5,10 +5,10 @@
   "license": "",
   "sideEffects": false,
   "scripts": {
-    "build": "run-p build:*",
+    "build": "npm run prebuild:css && run-p build:*",
     "build:dom-scripts": "esbuild ./app/DOM/utils.ts --entry-names=[name]-[hash] --outdir=./public/utils",
     "build:remix": "remix build",
-    "build:css": "tailwindcss -m -i ./styles/app.css -o app/styles/app.css",
+    "prebuild:css": "tailwindcss -m -i ./styles/app.css -o app/styles/app.css",
     "dev": "remix build && run-p dev:*",
     "dev:node": "env-cmd -f .env.dev tsx watch ./server.ts",
     "dev:remix": "remix watch",
