@@ -45,7 +45,7 @@ export type Selection = {
   errorTooLong?: boolean;
 };
 
-const MAX_SELECTION_LEN = 300;
+const MAX_SELECTION_LEN = 10_000;
 
 export function getSelectionUpdate(rangeSerializer: Rangee): null | Selection {
   const rangeWithText = getNonEmptyRangeWithText();
