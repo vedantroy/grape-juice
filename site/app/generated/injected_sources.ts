@@ -1,3 +1,3 @@
 
-export const SCRIPT_SRC = "/inject/index.8474b00d.js";
-export const CSS_SRC = "/inject/index.fb81043e.css";
+export const SCRIPT_SRC = "/inject/main.a942c5b3.js";
+export const CSS_SRC = "/inject/main.4b4d9ddf.css";

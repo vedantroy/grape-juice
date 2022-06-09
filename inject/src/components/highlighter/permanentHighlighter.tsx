@@ -11,6 +11,8 @@ import {
 } from "./sharedTypes";
 import CommentBox from "./commentBox";
 import useWindowDimensions from "../hooks/useWIndowDimensions";
+//import useScrollPosition from "@react-hook/window-scroll";
+// import { useScrollPosition } from "@n8tb1t/use-scroll-position";
 import { getRectsFromRanges } from "./rect";
 import { Rect } from "src/utils/rect";
 import Flatbush from "flatbush";
@@ -41,11 +43,25 @@ export default function PermanentHighlighter({
 }: PermanentHighlighterProps) {
   const { width, height } = useWindowDimensions();
 
+  const [curPos, setCurPos] = useState<{ x: number; y: number }>({
+    x: -1,
+    y: -1,
+  });
+  //useScrollPosition(({ prevPos, currPos }) => {
+  //  setCurPos({ x: currPos.x, y: currPos.y });
+  //});
+
+  //const scrollY = useScrollPosition(SCROLL_UPDATE_FPS);
+  console.log("re-rendering");
+  console.log(curPos);
+
   const [deserializedHighlights, rectIdxToAreaAndId, flatbush]: [
     InstantiatedHighlight[],
     RectIdxToHighlightAreaAndId,
     Flatbush | null
   ] = useMemo(() => {
+    console.log("recalculating highlight lengths");
+
     const idWithHighlight = _.toPairs(highlights) as Array<
       [HighlightId, HighlightWithActiveRanges]
     >;
@@ -88,7 +104,7 @@ export default function PermanentHighlighter({
     flatbush.finish();
 
     return [deserializedHighlights, rectIdxToAreaAndId, flatbush];
-  }, [highlights, width, height]);
+  }, [highlights, width, height, curPos]);
 
   const [activeHighlightId, setActiveHighlightId] =
     useState<HighlightId | null>(null);
