@@ -11,8 +11,8 @@ declare global {
   var __db: DB | undefined;
 }
 
+console.log(`Running db at path: ${LMDB_PATH}`);
 if (IS_PRODUCTION) {
-  console.log(`Running db at path: ${LMDB_PATH}`);
   db = new DBImpl({ path: LMDB_PATH });
 } else {
   if (!global.__db) {

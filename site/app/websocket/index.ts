@@ -21,6 +21,9 @@ declare global {
 export function getApp(): uWS.TemplatedApp {
   if (!global.__app) {
     const app = uWS.App({}).ws("/*", {
+      // TODO: Will this be a footgun?
+      idleTimeout: 3_600,
+      sendPingsAutomatically: true,
       message: (ws, bytes, isBinary) => {
         invariant(isBinary, "Websocket messages must be binary");
         const unpacked = unpack(Buffer.from(bytes));

@@ -89,10 +89,6 @@ export async function handleCreateHighlightReply(
     replies,
   };
 
-  //console.log("MANUAL PUBLISH");
-  //console.log(app.numSubscribers("/post/foobar"));
-  //app.publish("/post/foobar", pack({ kind: 5 }), true);
-
   const bytes = pack(newMsg);
   // Calling `.slice` because I don't want to run into mysterious
   // detached buffer errors (to be seen if this fixes them)
