@@ -4,7 +4,8 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import ReactShadowRoot from "react-shadow-root";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
+import toastStyles from "react-toastify/dist/ReactToastify.css";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import { pack, unpack } from "msgpackr";
 import { finder } from "@medv/finder";
@@ -36,9 +37,8 @@ import PermanentHighlighter, {
 } from "./highlighter/permanentHighlighter";
 import { HighlightId, PostId, ReplyId, UserId } from "@site/db/types.server";
 import { HighlightWithActiveRanges } from "./highlighter/sharedTypes";
-import invariant from "tiny-invariant";
 import CursorChat from "./cursor-chat/react";
-import { WEBSOCKET_URL, CHANNEL, CURSOR_CHAT_URL } from "./env";
+import { WEBSOCKET_URL, CHANNEL, CURSOR_CHAT_URL, isDebugMode } from "./env";
 
 // I hate the pattern of stuff something inside a "go" function
 // This is my solution
@@ -57,12 +57,51 @@ const HighlightStatus = {
 } as const;
 type HighlightStatus = typeof HighlightStatus[keyof typeof HighlightStatus];
 
+const ToastIds = {
+  [ReadyState.CLOSED]: "closed",
+  [ReadyState.OPEN]: "open",
+  [ReadyState.CLOSING]: "closing",
+  [ReadyState.UNINSTANTIATED]: "uninstantiated",
+  [ReadyState.CONNECTING]: "connecting",
+} as const;
+
+function dismissAllToasts(/*id: ReadyState*/) {
+  _.toPairs(ToastIds)
+    //.filter(([key, _]) => id.toString() !== key)
+    .forEach(([_, value]) => {
+      toast.dismiss(value);
+    });
+}
+
 const App = () => {
-  const { sendMessage, lastMessage, readyState } = useWebSocket(WEBSOCKET_URL, {
-    onOpen() {
-      console.log("websocket opened");
-    },
-  });
+  const { sendMessage, lastMessage, readyState } = useWebSocket(
+    WEBSOCKET_URL,
+    {}
+  );
+
+  useEffect(() => {
+    dismissAllToasts();
+    const toastId = ToastIds[readyState];
+    const opts = {
+      toastId,
+      hideProgressBar: true,
+      autoClose: 3000,
+    };
+    switch (readyState) {
+      case ReadyState.CONNECTING:
+        toast.info("Connecting to websocket", opts);
+        break;
+      case ReadyState.OPEN:
+        toast.success("Connected to websocket", opts);
+        break;
+      case ReadyState.CLOSING:
+        toast.error("Websocket is closing", opts);
+        break;
+      case ReadyState.CLOSED:
+        toast.error("Websocket closed", opts);
+        break;
+    }
+  }, [readyState]);
 
   const [highlightStatus, setHighlightStatus] = useState<HighlightStatus>(
     HighlightStatus.Ready
@@ -76,12 +115,6 @@ const App = () => {
 
   const [selection, setSelection] = useState<Selection | null>(null);
   const [userId, setUserId] = useState<UserId | null>(null);
-
-  // useEffect(() => {
-  //   if (!userId) return;
-  //   const color = getColorFromUserId(userId as UserId);
-  //   new CursorChat(CURSOR_CHAT_URL, color);
-  // }, [userId]);
 
   const handleSelection = useCallback(
     (msg: SelectionMessage) => {
@@ -283,6 +316,9 @@ const App = () => {
       initialReply: commentText,
     };
     sendMessage(pack(msg), false);
+    if (isDebugMode()) {
+      console.log(`Sent message: ${JSON.stringify(msg)}`);
+    }
   }, [selection, userId]);
 
   return (
@@ -290,7 +326,10 @@ const App = () => {
       <div style={{ all: "initial" }}>
         <ReactShadowRoot>
           <style type="text/css">{twStyles}</style>
-          {/* <style id="toastify" type="text/css"> {toastStyles}</style> */}
+          <style id="toastify" type="text/css">
+            {" "}
+            {toastStyles}
+          </style>
           {selection ? (
             <HighlightButton
               status={
@@ -313,7 +352,11 @@ const App = () => {
             />
           )}
           <TransientHighlighter highlights={transientHighlights} />
-          <ToastContainer pauseOnFocusLoss={false} pauseOnHover={false} />
+          <ToastContainer
+            position="bottom-right"
+            pauseOnFocusLoss={false}
+            pauseOnHover={false}
+          />
         </ReactShadowRoot>
       </div>
       <div style={{ all: "initial" }}>
