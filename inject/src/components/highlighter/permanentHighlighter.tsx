@@ -43,24 +43,24 @@ export default function PermanentHighlighter({
 }: PermanentHighlighterProps) {
   const { width, height } = useWindowDimensions();
 
-  const [curPos, setCurPos] = useState<{ x: number; y: number }>({
-    x: -1,
-    y: -1,
-  });
+  //const [curPos, setCurPos] = useState<{ x: number; y: number }>({
+  //  x: -1,
+  //  y: -1,
+  //});
   //useScrollPosition(({ prevPos, currPos }) => {
   //  setCurPos({ x: currPos.x, y: currPos.y });
   //});
 
   //const scrollY = useScrollPosition(SCROLL_UPDATE_FPS);
-  console.log("re-rendering");
-  console.log(curPos);
+  //console.log("re-rendering");
+  //console.log(curPos);
 
   const [deserializedHighlights, rectIdxToAreaAndId, flatbush]: [
     InstantiatedHighlight[],
     RectIdxToHighlightAreaAndId,
     Flatbush | null
   ] = useMemo(() => {
-    console.log("recalculating highlight lengths");
+    //console.log("recalculating highlight lengths");
 
     const idWithHighlight = _.toPairs(highlights) as Array<
       [HighlightId, HighlightWithActiveRanges]
@@ -104,7 +104,7 @@ export default function PermanentHighlighter({
     flatbush.finish();
 
     return [deserializedHighlights, rectIdxToAreaAndId, flatbush];
-  }, [highlights, width, height, curPos]);
+  }, [highlights, width, height]);
 
   const [activeHighlightId, setActiveHighlightId] =
     useState<HighlightId | null>(null);
