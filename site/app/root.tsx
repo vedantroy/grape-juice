@@ -7,6 +7,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@remix-run/react";
+import { MetronomeLinks } from "@metronome-sh/react";
 import styles from "~/styles/app.css";
 
 export const meta: MetaFunction = () => ({
@@ -25,6 +26,7 @@ export default function App() {
       <head>
         <Meta />
         <Links />
+        <MetronomeLinks />
       </head>
       <body>
         <Outlet />

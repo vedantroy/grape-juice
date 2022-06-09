@@ -21,6 +21,8 @@
     "start:cursor-chat": "cross-env HOST=localhost PORT=9002 y-websocket"
   },
   "dependencies": {
+    "@metronome-sh/express": "^5.5.3",
+    "@metronome-sh/react": "^5.5.3",
     "@remix-run/express": "^1.5.1",
     "@remix-run/node": "^1.5.1",
     "@remix-run/react": "^1.5.1",

@@ -90,6 +90,12 @@ const App = () => {
   });
 
   useEffect(() => {
+    toast.info(
+      'Select text on the page and press the resulting "Comment" button to create a highlight'
+    );
+  }, []);
+
+  useEffect(() => {
     dismissAllToasts();
     const toastId = ToastIds[readyState];
     const opts = {

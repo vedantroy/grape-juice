@@ -3,6 +3,7 @@ import env from "getenv.ts";
 // Setting secrets in fly.io using
 // cat .env | fly secrets import
 // causes all the values to be surrounded in quotes
+// ^ NO, THE ABOVE IS INCORRECT
 function trimQuotes(str: string): string {
   if (str[0] === '"' && str[str.length - 1] === '"') {
     return str.slice(1, -1);

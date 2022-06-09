@@ -5,6 +5,10 @@ import morgan from "morgan";
 import cors from "cors";
 import { createRequestHandler } from "@remix-run/express";
 import { initWebSocketOnce } from "./app/websocket";
+import {
+  createMetronomeGetLoadContext,
+  registerMetronome,
+} from "@metronome-sh/express";
 
 const BUILD_DIR = path.join(process.cwd(), "build");
 
@@ -31,6 +35,10 @@ app.use(express.static("public", { maxAge: "1h" }));
 
 app.use(morgan("tiny"));
 
+const buildWithMetronome = registerMetronome(require(BUILD_DIR));
+const metronomeGetLoadContext =
+  createMetronomeGetLoadContext(buildWithMetronome);
+
 app.all(
   "*",
   process.env.NODE_ENV === "development"
@@ -38,13 +46,15 @@ app.all(
         purgeRequireCache();
 
         return createRequestHandler({
-          build: require(BUILD_DIR),
+          build: buildWithMetronome,
           mode: process.env.NODE_ENV,
+          getLoadContext: metronomeGetLoadContext,
         })(req, res, next);
       }
     : createRequestHandler({
-        build: require(BUILD_DIR),
+        build: buildWithMetronome,
         mode: process.env.NODE_ENV,
+        getLoadContext: metronomeGetLoadContext,
       })
 );
 const port = 3000;
