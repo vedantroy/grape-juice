@@ -3,6 +3,7 @@ export function getCSSOMStyles() {
   const CSSOMSheets = Array.from(styleSheets).filter((sheet) => {
     var _a, _b;
     const hasHref = Boolean(sheet.href);
+    console.log(sheet, sheet.ownerNode);
     const hasStylesInDOM = (((_b = (_a = sheet.ownerNode) == null ? void 0 : _a.innerText) == null ? void 0 : _b.length) || 0) > 0;
     return sheet.cssRules && !hasHref && !hasStylesInDOM;
   });

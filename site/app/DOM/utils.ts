@@ -6,7 +6,12 @@ export function getCSSOMStyles(): string {
     const hasHref = Boolean(sheet.href);
     //@ts-expect-error - too hard to Typescriptify
     const hasStylesInDOM = (sheet.ownerNode?.innerText?.length || 0) > 0;
-    return sheet.cssRules && !hasHref! && !hasStylesInDOM;
+    return (sheet.cssRules && !hasHref! && !hasStylesInDOM) ||
+          // This means it's probably injected by the goober css in js lib
+          // We need this b/c (for some reason),
+          // goober style sheets can contain
+          // actual CSS text
+          (sheet.ownerNode as any)?.id === "_goober";
   });
 
   const CSSOMStylesText = CSSOMSheets.map((sheet) =>

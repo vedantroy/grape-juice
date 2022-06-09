@@ -5,7 +5,7 @@ import { notFound } from "remix-utils";
 import { getParam } from "~/helpers/params";
 import { PostId } from "~/db/types.server";
 import rewriter from "~/services/HTMLRewriter";
-import { SCRIPT_SRC } from "~/generated/injected_sources";
+import { CSS_SRC, SCRIPT_SRC } from "~/generated/injected_sources";
 import { CURSOR_CHAT_URL, HOST_URL, WEBSOCKET_URL } from "~/services/env";
 
 export const loader: LoaderFunction = async ({ params }) => {
@@ -19,6 +19,7 @@ export const loader: LoaderFunction = async ({ params }) => {
   const { html } = page;
 
   const withOverlay = rewriter.injectOverlay(html, {
+    cssSrc: CSS_SRC,
     scriptSrc: SCRIPT_SRC,
     cursorChatUrl: CURSOR_CHAT_URL,
     websocketRootUrl: WEBSOCKET_URL,

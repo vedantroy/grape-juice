@@ -1,10 +1,10 @@
 export function getCSSOMStyles() {
   const { styleSheets } = document;
   const CSSOMSheets = Array.from(styleSheets).filter((sheet) => {
-    var _a, _b;
+    var _a, _b, _c;
     const hasHref = Boolean(sheet.href);
     const hasStylesInDOM = (((_b = (_a = sheet.ownerNode) == null ? void 0 : _a.innerText) == null ? void 0 : _b.length) || 0) > 0;
-    return sheet.cssRules && !hasHref && hasStylesInDOM;
+    return sheet.cssRules && !hasHref && !hasStylesInDOM || ((_c = sheet.ownerNode) == null ? void 0 : _c.id) === "_goober";
   });
   const CSSOMStylesText = CSSOMSheets.map((sheet) => Array.from(sheet.cssRules).map((rule) => rule.cssText).join("")).join("");
   return CSSOMStylesText;

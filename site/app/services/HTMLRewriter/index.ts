@@ -7,6 +7,7 @@ export interface Rewriter {
   injectOverlay(
     html: string,
     data: {
+      cssSrc: string;
       scriptSrc: string;
       cursorChatUrl: string;
       websocketRootUrl: string;

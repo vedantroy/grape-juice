@@ -1,5 +1,5 @@
 // React Toastify uses CSS variables
-// I think these break inside the shadow DOM
+// These break inside the shadow DOM
 import fs from "fs";
 import css, { Rule, Declaration } from "css";
 import invariant from "tiny-invariant";

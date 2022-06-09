@@ -30,7 +30,7 @@ export const regexRewriter: Rewriter = {
   },
   injectOverlay(
     html,
-    { scriptSrc, cursorChatUrl, websocketRootUrl, postId, hostUrl }
+    { cssSrc, scriptSrc, cursorChatUrl, websocketRootUrl, postId, hostUrl }
   ) {
     return injectIntoHead(html, [
       oneLine`
@@ -44,6 +44,7 @@ export const regexRewriter: Rewriter = {
     	</script>
     `,
       `<script type="module" src="${scriptSrc}"></script>`,
+      `<link rel="stylesheet" href="${cssSrc}">`,
       // We want links to open a new tab, the UX is less confusing
       `<base target="_blank"/>`,
     ]);

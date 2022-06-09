@@ -5,7 +5,10 @@
 import React, { useCallback, useEffect, useState } from "react";
 import ReactShadowRoot from "react-shadow-root";
 import { ToastContainer, toast } from "react-toastify";
-import toastStyles from "react-toastify/dist/ReactToastify.css";
+import toastStyles from "../generated/react-toastify.inlined.css?inline";
+// We still need to inject some global styles b/c
+// react-toastify generates SVGs that use global CSS variables
+import "../generated/react-toastify.vars.css";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import { pack, unpack } from "msgpackr";
 import { finder } from "@medv/finder";
@@ -83,13 +86,13 @@ const App = () => {
     dismissAllToasts();
     const toastId = ToastIds[readyState];
     const opts = {
-      toastId,
+      id: toastId,
       hideProgressBar: true,
-      autoClose: 3000,
+      autoClose: 3_000,
     };
     switch (readyState) {
       case ReadyState.CONNECTING:
-        toast.info("Connecting to websocket", opts);
+        toast.info("Connecting to websocket...", opts);
         break;
       case ReadyState.OPEN:
         toast.success("Connected to websocket", opts);
@@ -326,10 +329,7 @@ const App = () => {
       <div style={{ all: "initial" }}>
         <ReactShadowRoot>
           <style type="text/css">{twStyles}</style>
-          <style id="toastify" type="text/css">
-            {" "}
-            {toastStyles}
-          </style>
+          <style type="text/css">{toastStyles}</style>
           {selection ? (
             <HighlightButton
               status={
@@ -352,11 +352,7 @@ const App = () => {
             />
           )}
           <TransientHighlighter highlights={transientHighlights} />
-          <ToastContainer
-            position="bottom-right"
-            pauseOnFocusLoss={false}
-            pauseOnHover={false}
-          />
+          <ToastContainer position="bottom-right" />
         </ReactShadowRoot>
       </div>
       <div style={{ all: "initial" }}>
@@ -372,38 +368,3 @@ const App = () => {
 };
 
 export default App;
-
-/*
-  const { sendMessage, lastMessage, readyState } = useWebSocket(
-    "ws://localhost:9001/",
-    {
-      // There might be some goofy stuff going on here
-      // with double retries (not sure why ...)
-      retryOnError: true,
-      //onOpen(event) {
-      //  toast.dismiss(connectingToastId);
-      //  toast.update(connectingToastId, {
-      //    type: "success",
-      //    autoClose: 1000,
-      //    render: "success",
-      //  });
-      //},
-      //shouldReconnect(closeEvent) {
-      //  toast("Connecting", {
-      //    autoClose: 5_000,
-      //    toastId: connectingToastId,
-      //  });
-      //  return true;
-      //},
-      //reconnectAttempts: 2,
-      //reconnectInterval: 5_000,
-      //onReconnectStop(attempts) {
-      //  toast.dismiss(connectingToastId);
-      //  toast.error("Connection failed", {
-      //    autoClose: false,
-      //    toastId: reconnectToastId,
-      //  });
-      //},
-    }
-  );
-  */

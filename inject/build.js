@@ -15,10 +15,12 @@ fs.mkdirSync(DEST_DIR);
 fs.copySync(SRC_DIR, DEST_DIR);
 
 const jsFile = fs.readdirSync(SRC_DIR).find((f) => f.endsWith(".js"));
+const cssFile = fs.readdirSync(SRC_DIR).find((f) => f.endsWith(".css"));
 
 const ROOT = "/inject";
 const code = `
 export const SCRIPT_SRC = "${ROOT}/${jsFile}";
+export const CSS_SRC = "${ROOT}/${cssFile}";
 `;
 
 fs.writeFileSync(
