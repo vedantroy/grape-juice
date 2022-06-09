@@ -162,9 +162,11 @@ export default function Index() {
         ></img>
       </div>
       <div className="flex flex-row flex-wrap gap-4 justify-center font-semibold pt-8 md:pt-16 text-white bg-gray-600 w-full text-center">
-        <UseCaseLink to="/p/n17TgCYw5QvMiMH5W7mxGQ">Comment Code</UseCaseLink>
-        <UseCaseLink to="">Highlight Articles</UseCaseLink>
-        <UseCaseLink to="">Annotate Books</UseCaseLink>
+        <UseCaseLink to="/p/7bK7BCTtXqFgoaLYg3oBWs">Comment Code</UseCaseLink>
+        <UseCaseLink to="/p/fP7aj1hgSeYkyknqYV1sgc">
+          Highlight Articles
+        </UseCaseLink>
+        <UseCaseLink to="/p/oWFLyaLc6Y2KgSgGh3anFT">Annotate Books</UseCaseLink>
       </div>
       <div className="flex-1 bg-gray-600 flex flex-col">
         <div className="font-semibold text-white self-center md:self-auto text-2xl md:text-4xl p-8 md:p-16 md:pb-8">
