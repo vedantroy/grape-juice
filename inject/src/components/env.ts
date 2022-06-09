@@ -15,6 +15,7 @@ declare global {
   var __INJECTED_CURSOR_CHAT_URL: string;
   var __INJECTED_HOST_URL: string;
   var __DEBUG_LOG: boolean;
+  var __LOG_VARS: Function;
 }
 
 export const CHANNEL = DEV ? "test" : window.__INJECTED_POST_ID;
@@ -32,6 +33,15 @@ invariant(CHANNEL, "CHANNEL is not defined");
 invariant(WEBSOCKET_URL, "WEBSOCKET_URL is not defined");
 invariant(CURSOR_CHAT_URL, "CURSOR_CHAT_URL is not defined");
 invariant(HOST_URL, "HOST_URL is not defined");
+
+window.__LOG_VARS = () => {
+  if (isDebugMode()) {
+    console.log(`CHANNEL: ${CHANNEL}`);
+    console.log(`WEBSOCKET_URL: ${WEBSOCKET_URL}`);
+    console.log(`CURSOR_CHAT_URL: ${CURSOR_CHAT_URL}`);
+    console.log(`HOST_URL: ${HOST_URL}`);
+  }
+};
 
 export function isDebugMode() {
   return window.__DEBUG_LOG;
