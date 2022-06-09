@@ -42,12 +42,29 @@ export type Selection = {
   y: number;
   serializedRange: string;
   container: HTMLElement;
+  errorTooLong?: boolean;
 };
+
+const MAX_SELECTION_LEN = 300;
+
 export function getSelectionUpdate(rangeSerializer: Rangee): null | Selection {
   const rangeWithText = getNonEmptyRangeWithText();
   if (!rangeWithText) return null;
 
-  const { range } = rangeWithText;
+  const { range, text } = rangeWithText;
+  if (text.length > MAX_SELECTION_LEN) {
+    // If we don't do this, we can crash the browser
+    // Because the serialization process blocks the main thread
+    // This is useful for when the entire document gets accidentally selected
+    return {
+      x: 0,
+      y: 0,
+      serializedRange: "",
+      container: null as any,
+      errorTooLong: true,
+    };
+  }
+
   const rangeAndSerializedRange = tryToSerializeRange(rangeSerializer, range);
   if (!rangeAndSerializedRange) return null;
 

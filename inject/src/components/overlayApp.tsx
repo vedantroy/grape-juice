@@ -289,7 +289,7 @@ const App = () => {
   }, [readyState === ReadyState.OPEN]);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || selection?.errorTooLong) return;
     //if (selection?.serializedRange === "QAA==") return;
     const emptySelection = selection === null;
     const msg = {
@@ -302,7 +302,7 @@ const App = () => {
   }, [selection?.serializedRange, userId]);
 
   const submitSelection = useCallback(() => {
-    if (!userId || !selection) return;
+    if (!userId || !selection || selection?.errorTooLong) return;
 
     setHighlightStatus(HighlightStatus.Submitting);
     const selector = finder(selection.container, {
@@ -341,7 +341,7 @@ const App = () => {
         <ReactShadowRoot>
           <style type="text/css">{twStyles}</style>
           <style type="text/css">{toastStyles}</style>
-          {selection ? (
+          {selection && !selection.errorTooLong ? (
             <HighlightButton
               status={
                 !userId
