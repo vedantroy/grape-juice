@@ -2,13 +2,12 @@ import { PostId } from "@site/db/types.server";
 import invariant from "tiny-invariant";
 
 // If you want to run against the prod server locally
-window.__INJECTED_POST_ID = "foo" as PostId;
-window.__INJECTED_WEBSOCKET_CHANNEL_URL = "wss://webhighlighter.com:9001";
-window.__INJECTED_CURSOR_CHAT_URL = "wss://webhighlighter.com:9002";
-window.__INJECTED_HOST_URL = "https://webhighlighter.com";
+// window.__INJECTED_POST_ID = "foo" as PostId;
+// window.__INJECTED_WEBSOCKET_CHANNEL_URL = "wss://webhighlighter.com:9001";
+// window.__INJECTED_CURSOR_CHAT_URL = "wss://webhighlighter.com:9002";
+// window.__INJECTED_HOST_URL = "https://webhighlighter.com";
 
-// const DEV = import.meta.env.DEV;
-const DEV = false;
+const DEV = import.meta.env.DEV;
 
 declare global {
   var __INJECTED_POST_ID: PostId;
