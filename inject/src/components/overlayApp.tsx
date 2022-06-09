@@ -5,7 +5,13 @@
 import React, { useCallback, useEffect, useState } from "react";
 import ReactShadowRoot from "react-shadow-root";
 import { ToastContainer, toast } from "react-toastify";
-import toastStyles from "../generated/react-toastify.inlined.css?inline";
+import toastStyles from "react-toastify/dist/ReactToastify.css";
+// This is a reminder of an embarassing mistake:
+// I spent a while trying to make *everything* work in the shadow DOM
+// when I could have just injected toast styles into the shadow DOM and
+// in the main DOM.
+
+// import toastStyles from "../generated/react-toastify.inlined.css?inline";
 // We still need to inject some global styles b/c
 // react-toastify generates SVGs that use global CSS variables
 import "../generated/react-toastify.vars.css";
@@ -77,10 +83,11 @@ function dismissAllToasts(/*id: ReadyState*/) {
 }
 
 const App = () => {
-  const { sendMessage, lastMessage, readyState } = useWebSocket(
-    WEBSOCKET_URL,
-    {}
-  );
+  const { sendMessage, lastMessage, readyState } = useWebSocket(WEBSOCKET_URL, {
+    retryOnError: true,
+    reconnectAttempts: 10,
+    reconnectInterval: 5_000,
+  });
 
   useEffect(() => {
     dismissAllToasts();
@@ -90,6 +97,10 @@ const App = () => {
       hideProgressBar: true,
       autoClose: 3_000,
     };
+    if (isDebugMode()) {
+      console.log(`Dismissing all toasts`);
+      console.log(`Displaying toast with id: ${opts.id}`);
+    }
     switch (readyState) {
       case ReadyState.CONNECTING:
         toast.info("Connecting to websocket...", opts);

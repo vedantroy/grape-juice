@@ -45,6 +45,7 @@ export const regexRewriter: Rewriter = {
     `,
       `<script type="module" src="${scriptSrc}"></script>`,
       `<link rel="stylesheet" href="${cssSrc}">`,
+      `<script>window.__DEBUG_LOG = true</script>`,
       // We want links to open a new tab, the UX is less confusing
       `<base target="_blank"/>`,
     ]);
